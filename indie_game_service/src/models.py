@@ -1,18 +1,18 @@
 from datetime import time
 from pydantic import BaseModel
-from typing import Annotated, Type, TypeVar
+from typing import Annotated, TypeVar
 
 from sqlalchemy import (ForeignKey, String)
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.database import Base
+from src.database import Model
 
 
 intpk = Annotated[int, mapped_column(primary_key=True)]
 SchemaResponse = TypeVar('SchemaResponse', bound=BaseModel)
 
 
-class Posts(Base):
+class Posts(Model):
     __tablename__ = 'posts'
 
     id: Mapped[intpk]
@@ -21,17 +21,8 @@ class Posts(Base):
     user_id: Mapped[int]
     date_create: Mapped[time]
 
-    def to_read_model(self, schema: Type[SchemaResponse]) -> SchemaResponse:
-        return schema(
-            id=self.id,
-            name=self.name,
-            description=self.description,
-            user_id=self.user_id,
-            date_create=self.date_create
-        )
 
-
-class Comments(Base):
+class Comments(Model):
     __tablename__ = 'comments'
 
     id: Mapped[intpk]
@@ -42,17 +33,8 @@ class Comments(Base):
     text: Mapped[str]
     date_create: Mapped[time]
 
-    def to_read_model(self, schema: Type[SchemaResponse]) -> SchemaResponse:
-        return schema(
-            id=self.id,
-            post_id=self.post_id,
-            user_id=self.user_id,
-            text=self.text,
-            date_create=self.date_create
-        )
 
-
-class Likes(Base):
+class Likes(Model):
     __tablename__ = 'likes'
 
     id: Mapped[intpk]
@@ -60,10 +42,3 @@ class Likes(Base):
         ForeignKey('posts.id')
     )
     user_id: Mapped[int]
-
-    def to_read_model(self, schema: Type[SchemaResponse]) -> SchemaResponse:
-        return schema(
-            id=self.id,
-            post_id=self.post_id,
-            user_id=self.user_id
-        )
