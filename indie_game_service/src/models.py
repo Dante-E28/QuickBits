@@ -24,6 +24,10 @@ class Posts(Model):
         back_populates='post',
         cascade='all, delete'
     )
+    likes: Mapped[list['Likes']] = relationship(
+        back_populates='post',
+        cascade='all, delete'
+    )
 
 
 class Comments(Model):
@@ -49,3 +53,7 @@ class Likes(Model):
         ForeignKey('posts.id')
     )
     user_id: Mapped[int]
+    post: Mapped['Posts'] = relationship(
+        back_populates='likes',
+    )
+
