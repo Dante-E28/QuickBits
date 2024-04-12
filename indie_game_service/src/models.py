@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import time, datetime
 from pydantic import BaseModel
 from typing import Annotated, TypeVar
 
