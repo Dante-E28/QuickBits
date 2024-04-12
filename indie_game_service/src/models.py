@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Annotated, TypeVar
 
 from sqlalchemy import (ForeignKey, String)
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database import Model
 
@@ -20,6 +20,10 @@ class Posts(Model):
     description: Mapped[str]
     user_id: Mapped[int]
     date_create: Mapped[time]
+    comments: Mapped[list['Comments']] = relationship(
+        back_populates='post',
+        cascade='all, delete'
+    )
 
 
 class Comments(Model):
@@ -32,6 +36,9 @@ class Comments(Model):
     user_id: Mapped[int]
     text: Mapped[str]
     date_create: Mapped[time]
+    post: Mapped['Posts'] = relationship(
+        back_populates='comments',
+    )
 
 
 class Likes(Model):
