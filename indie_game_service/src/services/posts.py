@@ -1,4 +1,3 @@
-from src.exceptions import DoesNotExist
 from src.unitofwork import IUnitOfWork
 from src.schemas.posts import PostsSchema, PostsSchemaAdd, PostsSchemaUpdate
 
