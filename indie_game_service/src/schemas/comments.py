@@ -5,11 +5,11 @@ from pydantic import BaseModel
 class CommentsSchemaBase(BaseModel):
     user_id: int
     text: str
+    post_id: int
 
 
 class CommentsSchema(CommentsSchemaBase):
     id: int
-    post_id: int
     date_create: datetime
 
     class Config:
