@@ -35,6 +35,9 @@ class CommentsService:
     ) -> CommentsSchema:
         """Get post for comment id"""
         async with uow:
+            ids = await uow.comments.get_all()
+            if comment_id not in ids:
+                raise ValueError(f'Comment {comment_id} not found')
             result = await uow.comments.get(id=comment_id)
             return CommentsSchema.model_validate(result)
 
