@@ -30,8 +30,7 @@ class LikesService:
     async def delete_like(
         uow: IUnitOfWork,
         like_id: int
-    ) -> LikesSchema:
+    ) -> None:
         async with uow:
-            result = await uow.likes.delete(id=like_id)
+            await uow.likes.delete(id=like_id)
             await uow.commit()
-            return LikesSchema.model_validate(result)

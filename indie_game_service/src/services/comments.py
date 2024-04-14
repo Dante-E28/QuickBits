@@ -1,6 +1,7 @@
-from typing import Dict, List
-
-from src.schemas.comments import CommentsSchema, CommentsSchemaAdd
+from src.schemas.comments import (
+    CommentsSchema, CommentsSchemaAdd,
+    CommentsSchemaUpdate
+)
 from src.unitofwork import IUnitOfWork
 
 
@@ -21,7 +22,7 @@ class CommentsService:
     async def get_comments_for_post(
         uow: IUnitOfWork,
         post_id: int,
-    ) -> List[CommentsSchema]:
+    ) -> list[CommentsSchema]:
         """Get comments on the post"""
         async with uow:
             comms = await uow.comments.get_all(post_id=post_id)
@@ -41,14 +42,13 @@ class CommentsService:
     async def edit_comment(
         uow: IUnitOfWork,
         comment_id: int,
-        comment_data: Dict
+        update_comment: CommentsSchemaUpdate
     ) -> CommentsSchema:
         """Edit comment"""
         async with uow:
-            updated_comment = CommentsSchemaAdd.model_validate(comment_data)
-            comment = await uow.posts.update(
-                id=comment_id,
-                data=updated_comment.model_dump())
+            comment = await uow.comments.update(
+                data=update_comment.model_dump(), id=comment_id
+            )
             await uow.commit()
             return CommentsSchema.model_validate(comment)
 
@@ -56,9 +56,8 @@ class CommentsService:
     async def delete_comment(
         uow: IUnitOfWork,
         comment_id: int
-    ) -> CommentsSchema:
+    ) -> None:
         """Delete comment"""
         async with uow:
-            comment = await uow.comments.delete(id=comment_id)
+            await uow.comments.delete(id=comment_id)
             await uow.commit()
-            return CommentsSchema.model_validate(comment)
