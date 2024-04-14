@@ -1,8 +1,8 @@
-from datetime import time
+from datetime import datetime
 from pydantic import BaseModel
 from typing import Annotated, TypeVar
 
-from sqlalchemy import (ForeignKey, String)
+from sqlalchemy import (DateTime, ForeignKey, String, func)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database import Model
@@ -19,7 +19,9 @@ class Posts(Model):
     name: Mapped[str] = mapped_column(String(50), unique=True)
     description: Mapped[str]
     user_id: Mapped[int]
-    date_create: Mapped[time]
+    date_create: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=func.now()
+    )
     comments: Mapped[list['Comments']] = relationship(
         back_populates='post',
         cascade='all, delete'
@@ -39,7 +41,9 @@ class Comments(Model):
     )
     user_id: Mapped[int]
     text: Mapped[str]
-    date_create: Mapped[time]
+    date_create: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=func.now()
+    )
     post: Mapped['Posts'] = relationship(
         back_populates='comments',
     )
@@ -56,4 +60,3 @@ class Likes(Model):
     post: Mapped['Posts'] = relationship(
         back_populates='likes',
     )
-

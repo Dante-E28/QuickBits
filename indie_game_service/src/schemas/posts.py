@@ -1,16 +1,16 @@
-from datetime import time
+from datetime import datetime, timezone
 from pydantic import BaseModel
 
 
 class PostsSchemaBase(BaseModel):
     name: str
-    description: str
     user_id: int
-    date_create: time
+    description: str
 
 
 class PostsSchema(PostsSchemaBase):
     id: int
+    date_create: datetime
 
     class Config:
         from_attributes = True
@@ -21,4 +21,5 @@ class PostsSchemaAdd(PostsSchemaBase):
 
 
 class PostsSchemaUpdate(PostsSchemaBase):
-    pass
+    name: str | None = None
+    description: str | None = None
