@@ -33,7 +33,7 @@ class PostsService:
         async with uow:
             ids = await uow.posts.get_all()
             if post_id not in ids:
-                raise ValueError(f'Post {post_id} not found')
+               raise ValueError(f'Post {post_id} not found')
             post = await uow.posts.get(id=post_id)
             return PostsSchema.model_validate(post)
 
