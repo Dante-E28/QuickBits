@@ -1,29 +1,46 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, status
+
+from src.deps import UOWDep
+from src.schemas.comments import CommentsSchema, CommentsSchemaAdd
+from src.services.comments import CommentsService
 
 
-router = APIRouter(prefix='/comments', tags=['Comments'])
+router = APIRouter()
 
 
-@router.get('', response_model=None)
-async def get_all_comments() -> None:
-    return None
+@router.get('', response_model=list[CommentsSchema])
+async def get_all_comments_for_post(
+    uow: UOWDep,
+    post_id: int
+) -> list[CommentsSchema]:
+    return await CommentsService.get_comments_for_post(uow, post_id)
 
 
-@router.get('/{comment_id}', response_model=None)
-async def get_post() -> None:
-    return None
+@router.get('/{comment_id}', response_model=CommentsSchema)
+async def get_comment(uow: UOWDep, comment_id: int) -> CommentsSchema:
+    return await CommentsService.get_post_for_comment(uow, comment_id)
 
 
-@router.post('', response_model=None)
-async def create_comment() -> None:
-    return None
+@router.post('', response_model=CommentsSchema)
+async def create_comment(
+    uow: UOWDep,
+    comment_in: CommentsSchemaAdd
+) -> CommentsSchema:
+    return await CommentsService.add_comment(uow, comment_in)
 
 
-@router.patch('/{comment_id}', response_model=None)
-async def update_comment() -> None:
-    return None
+@router.patch('/{comment_id}', response_model=CommentsSchema)
+async def update_comment(
+    uow: UOWDep,
+    comment_update,
+    comment: CommentsSchema = Depends(get_comment)
+) -> CommentsSchema:
+    return await CommentsService.edit_comment(uow, comment.id, comment_update)
 
 
-@router.delete('/{comment_id}', response_model=None)
-async def delete_comment() -> None:
-    return None
+@router.delete('/{comment_id}', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_comment(
+    uow: UOWDep,
+    comment: CommentsSchema = Depends(get_comment)
+) -> None:
+    return await CommentsService.delete_comment(uow, comment.id)
