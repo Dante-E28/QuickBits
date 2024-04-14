@@ -16,6 +16,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title='Инди Сервис', lifespan=lifespan)
 
 
-app.include_router(comments_router)
-app.include_router(likes_router)
-app.include_router(posts_router)
+app.include_router(comments_router, prefix='/comments', tags=['Comments'])
+app.include_router(likes_router, prefix='/likes', tags=['Likes'])
+app.include_router(posts_router, prefix='/posts', tags=['Posts'])
