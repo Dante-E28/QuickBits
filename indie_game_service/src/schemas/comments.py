@@ -1,16 +1,16 @@
-from datetime import time
+from datetime import datetime
 from pydantic import BaseModel
 
 
 class CommentsSchemaBase(BaseModel):
-    post_id: int
     user_id: int
     text: str
-    date_create: time
 
 
 class CommentsSchema(CommentsSchemaBase):
     id: int
+    post_id: int
+    date_create: datetime
 
     class Config:
         from_attributes = True
@@ -18,3 +18,7 @@ class CommentsSchema(CommentsSchemaBase):
 
 class CommentsSchemaAdd(CommentsSchemaBase):
     pass
+
+
+class CommentsSchemaUpdate(CommentsSchemaBase):
+    text: str | None = None
