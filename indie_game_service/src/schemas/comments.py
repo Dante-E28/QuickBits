@@ -20,5 +20,5 @@ class CommentsSchemaAdd(CommentsSchemaBase):
     pass
 
 
-class CommentsSchemaUpdate(CommentsSchemaBase):
+class CommentsSchemaUpdate(BaseModel):
     text: str | None = None

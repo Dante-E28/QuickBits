@@ -1,5 +1,5 @@
-from src.unitofwork import IUnitOfWork
 from src.schemas.posts import PostsSchema, PostsSchemaAdd, PostsSchemaUpdate
+from src.unitofwork import IUnitOfWork
 
 
 class PostsService:
@@ -33,7 +33,7 @@ class PostsService:
         async with uow:
             ids = await uow.posts.get_all()
             if post_id not in ids:
-               raise ValueError(f'Post {post_id} not found')
+                raise ValueError(f'Post {post_id} not found')
             post = await uow.posts.get(id=post_id)
             return PostsSchema.model_validate(post)
 
@@ -45,6 +45,11 @@ class PostsService:
     ) -> PostsSchema:
         """Edit post"""
         async with uow:
+            old_post = await uow.posts.get(id=post_id)
+            if update_post.name is None:
+                update_post.name = old_post.name
+            if update_post.description is None:
+                update_post.description = old_post.description
             result = await uow.posts.update(
                 data=update_post.model_dump(), id=post_id
             )
