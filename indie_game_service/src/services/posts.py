@@ -1,3 +1,5 @@
+from fastapi import HTTPException, status
+from sqlalchemy.exc import NoResultFound
 from src.schemas.posts import PostsSchema, PostsSchemaAdd, PostsSchemaUpdate
 from src.unitofwork import IUnitOfWork
 
@@ -31,10 +33,13 @@ class PostsService:
     ) -> PostsSchema:
         """Get post by id"""
         async with uow:
-            ids = await uow.posts.get_all()
-            if post_id not in ids:
-                raise ValueError(f'Post {post_id} not found')
-            post = await uow.posts.get(id=post_id)
+            try:
+                post = await uow.posts.get(id=post_id)
+            except NoResultFound:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f'Post id: {post_id} not found',
+                )
             return PostsSchema.model_validate(post)
 
     @staticmethod
@@ -45,16 +50,18 @@ class PostsService:
     ) -> PostsSchema:
         """Edit post"""
         async with uow:
-            old_post = await uow.posts.get(id=post_id)
-            if update_post.name is None:
-                update_post.name = old_post.name
-            if update_post.description is None:
-                update_post.description = old_post.description
-            result = await uow.posts.update(
-                data=update_post.model_dump(), id=post_id
-            )
-            await uow.commit()
-            return PostsSchema.model_validate(result)
+            try:
+                result = await uow.posts.update(
+                    data=update_post.model_dump(
+                        exclude_none=True), id=post_id
+                    )
+                await uow.commit()
+                return PostsSchema.model_validate(result)
+            except NoResultFound:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f'Comment id: {post_id} not found'
+                )
 
     @staticmethod
     async def delete_post(
@@ -63,5 +70,12 @@ class PostsService:
     ) -> None:
         """Delete post"""
         async with uow:
-            await uow.posts.delete(id=post_id)
-            await uow.commit()
+            exists_post = await PostsService.get_post(uow, post_id)
+            if exists_post:
+                await uow.posts.delete(id=post_id)
+                await uow.commit()
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f'Comment id: {post_id} not found'
+                )
