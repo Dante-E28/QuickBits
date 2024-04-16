@@ -1,3 +1,5 @@
+from fastapi import HTTPException, status
+from sqlalchemy.exc import NoResultFound
 from src.schemas.comments import (
     CommentsSchema, CommentsSchemaAdd,
     CommentsSchemaUpdate
@@ -14,6 +16,13 @@ class CommentsService:
     ) -> CommentsSchema:
         """Add comment"""
         async with uow:
+            try:
+                await uow.posts.get(id=comment.post_id)
+            except NoResultFound:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f'Post id: {comment.post_id} not found'
+                )
             result = await uow.comments.add(comment.model_dump())
             await uow.commit()
             return CommentsSchema.model_validate(result)
@@ -29,16 +38,19 @@ class CommentsService:
             return [CommentsSchema.model_validate(comm) for comm in comms]
 
     @staticmethod
-    async def get_post_for_comment(
+    async def get_comment_for_post(
         uow: IUnitOfWork,
         comment_id: int,
     ) -> CommentsSchema:
-        """Get post for comment id"""
+        """Get comment for comment id"""
         async with uow:
-            ids = await uow.comments.get_all()
-            if comment_id not in ids:
-                raise ValueError(f'Comment {comment_id} not found')
-            result = await uow.comments.get(id=comment_id)
+            try:
+                result = await uow.comments.get(id=comment_id)
+            except NoResultFound:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f'comment_id: {comment_id} not found',
+                )
             return CommentsSchema.model_validate(result)
 
     @staticmethod
@@ -49,11 +61,18 @@ class CommentsService:
     ) -> CommentsSchema:
         """Edit comment"""
         async with uow:
-            comment = await uow.comments.update(
-                data=update_comment.model_dump(), id=comment_id
-            )
-            await uow.commit()
-            return CommentsSchema.model_validate(comment)
+            try:
+                comment = await uow.comments.update(
+                    data=update_comment.model_dump(
+                        exclude_none=True), id=comment_id
+                    )
+                await uow.commit()
+                return CommentsSchema.model_validate(comment)
+            except NoResultFound:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f'Comment id: {comment_id} not found'
+                )
 
     @staticmethod
     async def delete_comment(
@@ -62,5 +81,14 @@ class CommentsService:
     ) -> None:
         """Delete comment"""
         async with uow:
-            await uow.comments.delete(id=comment_id)
-            await uow.commit()
+            exists_comment = await CommentsService.get_comment_for_post(
+                uow, comment_id
+            )
+            if exists_comment:
+                await uow.comments.delete(id=comment_id)
+                await uow.commit()
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f'Comment id: {comment_id} not found'
+                )
