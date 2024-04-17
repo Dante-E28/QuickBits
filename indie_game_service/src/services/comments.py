@@ -28,7 +28,7 @@ class CommentsService:
             return CommentsSchema.model_validate(result)
 
     @staticmethod
-    async def get_comments_for_post(
+    async def get_comments(
         uow: IUnitOfWork,
         post_id: int,
     ) -> list[CommentsSchema]:
@@ -38,7 +38,7 @@ class CommentsService:
             return [CommentsSchema.model_validate(comm) for comm in comms]
 
     @staticmethod
-    async def get_comment_for_post(
+    async def get_comment(
         uow: IUnitOfWork,
         comment_id: int,
     ) -> CommentsSchema:
@@ -48,7 +48,7 @@ class CommentsService:
                 result = await uow.comments.get(id=comment_id)
             except NoResultFound:
                 raise HTTPException(
-                    status_code=404,
+                    status_code=status.HTTP_404_NOT_FOUND,
                     detail=f'comment_id: {comment_id} not found',
                 )
             return CommentsSchema.model_validate(result)
@@ -61,18 +61,12 @@ class CommentsService:
     ) -> CommentsSchema:
         """Edit comment"""
         async with uow:
-            try:
-                comment = await uow.comments.update(
-                    data=update_comment.model_dump(
-                        exclude_none=True), id=comment_id
-                    )
-                await uow.commit()
-                return CommentsSchema.model_validate(comment)
-            except NoResultFound:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f'Comment id: {comment_id} not found'
+            comment = await uow.comments.update(
+                data=update_comment.model_dump(
+                    exclude_none=True), id=comment_id
                 )
+            await uow.commit()
+            return CommentsSchema.model_validate(comment)
 
     @staticmethod
     async def delete_comment(
@@ -81,14 +75,5 @@ class CommentsService:
     ) -> None:
         """Delete comment"""
         async with uow:
-            exists_comment = await CommentsService.get_comment_for_post(
-                uow, comment_id
-            )
-            if exists_comment:
-                await uow.comments.delete(id=comment_id)
-                await uow.commit()
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f'Comment id: {comment_id} not found'
-                )
+            await uow.comments.delete(id=comment_id)
+            await uow.commit()

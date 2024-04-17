@@ -1,10 +1,10 @@
-from datetime import datetime, timezone
-from pydantic import BaseModel
+from datetime import datetime
+from pydantic import BaseModel, PositiveInt
 
 
 class PostsSchemaBase(BaseModel):
     name: str
-    user_id: int
+    user_id: PositiveInt
     description: str
 
 
@@ -20,6 +20,6 @@ class PostsSchemaAdd(PostsSchemaBase):
     pass
 
 
-class PostsSchemaUpdate(PostsSchemaBase):
+class PostsSchemaUpdate(BaseModel):
     name: str | None = None
     description: str | None = None

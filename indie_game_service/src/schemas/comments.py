@@ -1,15 +1,15 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, PositiveInt
 
 
 class CommentsSchemaBase(BaseModel):
-    user_id: int
+    user_id: PositiveInt
     text: str
-    post_id: int
 
 
 class CommentsSchema(CommentsSchemaBase):
     id: int
+    post_id: int
     date_create: datetime
 
     class Config:

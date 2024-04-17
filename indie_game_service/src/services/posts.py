@@ -45,23 +45,17 @@ class PostsService:
     @staticmethod
     async def edit_post(
         uow: IUnitOfWork,
+        update_post: PostsSchemaUpdate,
         post_id: int,
-        update_post: PostsSchemaUpdate
     ) -> PostsSchema:
         """Edit post"""
         async with uow:
-            try:
-                result = await uow.posts.update(
-                    data=update_post.model_dump(
-                        exclude_none=True), id=post_id
-                    )
-                await uow.commit()
-                return PostsSchema.model_validate(result)
-            except NoResultFound:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f'Comment id: {post_id} not found'
-                )
+            result = await uow.posts.update(
+                data=update_post.model_dump(
+                    exclude_none=True), id=post_id
+            )
+            await uow.commit()
+            return PostsSchema.model_validate(result)
 
     @staticmethod
     async def delete_post(
@@ -70,12 +64,5 @@ class PostsService:
     ) -> None:
         """Delete post"""
         async with uow:
-            exists_post = await PostsService.get_post(uow, post_id)
-            if exists_post:
-                await uow.posts.delete(id=post_id)
-                await uow.commit()
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f'Comment id: {post_id} not found'
-                )
+            await uow.posts.delete(id=post_id)
+            await uow.commit()

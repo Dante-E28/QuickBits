@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, PositiveInt
 
 
 class LikesSchemaBase(BaseModel):
-    post_id: int
-    user_id: int
+    post_id: PositiveInt
+    user_id: PositiveInt
 
 
 class LikesSchema(LikesSchemaBase):

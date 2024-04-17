@@ -51,7 +51,10 @@ class LikesService:
                 await uow.likes.get(post_id=post_id, user_id=user_id)
                 return True
             except NoResultFound:
-                return False
+                raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail='Like not found'
+                    )
 
     @staticmethod
     async def delete_like(
