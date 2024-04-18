@@ -1,5 +1,4 @@
-from fastapi import HTTPException, status
-from sqlalchemy.exc import NoResultFound
+from src.exceptions import EntityNotFoundError
 from src.schemas.comments import (
     CommentsSchema, CommentsSchemaAdd,
     CommentsSchemaUpdate
@@ -16,16 +15,13 @@ class CommentsService:
     ) -> CommentsSchema:
         """Add comment"""
         async with uow:
-            try:
-                await uow.posts.get(id=comment.post_id)
-            except NoResultFound:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f'Post id: {comment.post_id} not found'
-                )
-            result = await uow.comments.add(comment.model_dump())
-            await uow.commit()
-            return CommentsSchema.model_validate(result)
+            exists_post = await uow.posts.get(id=comment.post_id)
+            if exists_post:
+                result = await uow.comments.add(comment.model_dump())
+                await uow.commit()
+                return CommentsSchema.model_validate(result)
+            else:
+                raise EntityNotFoundError('Post', comment.post_id)
 
     @staticmethod
     async def get_comments(
@@ -44,14 +40,11 @@ class CommentsService:
     ) -> CommentsSchema:
         """Get comment for comment id"""
         async with uow:
-            try:
-                result = await uow.comments.get(id=comment_id)
-            except NoResultFound:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f'comment_id: {comment_id} not found',
-                )
-            return CommentsSchema.model_validate(result)
+            result = await uow.comments.get(id=comment_id)
+            if result:
+                return CommentsSchema.model_validate(result)
+            else:
+                raise EntityNotFoundError('Comment', comment_id)
 
     @staticmethod
     async def edit_comment(
