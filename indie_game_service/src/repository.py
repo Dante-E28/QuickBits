@@ -47,11 +47,11 @@ class SQLAlchemyRepository(AbstractRepository, Generic[ModelType]):
         res = await self.session.execute(stmt)
         return res.scalar_one()
 
-    async def get(self, **filters) -> ModelType:
+    async def get(self, **filters) -> ModelType | None:
         """Gets a entity by its id."""
         stmt = select(self.model).filter_by(**filters)
         res = await self.session.execute(stmt)
-        return res.scalar_one()
+        return res.scalar_one_or_none()
 
     async def get_all(self, **filters) -> Sequence[ModelType]:
         """Gets all entities or by filter."""
@@ -61,7 +61,7 @@ class SQLAlchemyRepository(AbstractRepository, Generic[ModelType]):
         res = await self.session.execute(stmt)
         return res.scalars().all()
 
-    async def delete(self, **filters) -> ModelType:
+    async def delete(self, **filters) -> ModelType | None:
         """Delete an existing entity."""
         stmt = select(self.model).filter_by(**filters)
         res = await self.session.scalar(stmt)
