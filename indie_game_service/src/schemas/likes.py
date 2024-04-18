@@ -15,3 +15,7 @@ class LikesSchema(LikesSchemaBase):
 
 class LikesSchemaAdd(LikesSchemaBase):
     pass
+
+
+class LikesSchemaDelete(LikesSchemaBase):
+    pass

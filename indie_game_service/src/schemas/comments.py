@@ -17,7 +17,7 @@ class CommentsSchema(CommentsSchemaBase):
 
 
 class CommentsSchemaAdd(CommentsSchemaBase):
-    pass
+    post_id: int
 
 
 class CommentsSchemaUpdate(BaseModel):

@@ -1,5 +1,4 @@
-from fastapi import HTTPException, status
-from sqlalchemy.exc import NoResultFound
+from src.exceptions import EntityNotFoundError
 from src.schemas.posts import PostsSchema, PostsSchemaAdd, PostsSchemaUpdate
 from src.unitofwork import IUnitOfWork
 
@@ -33,14 +32,11 @@ class PostsService:
     ) -> PostsSchema:
         """Get post by id"""
         async with uow:
-            try:
-                post = await uow.posts.get(id=post_id)
-            except NoResultFound:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f'Post id: {post_id} not found',
-                )
-            return PostsSchema.model_validate(post)
+            result = await uow.posts.get(id=post_id)
+            if result:
+                return PostsSchema.model_validate(result)
+            else:
+                raise EntityNotFoundError('Post', post_id)
 
     @staticmethod
     async def edit_post(
