@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status
 
 from src.deps import UOWDep
-from src.schemas.likes import LikesSchema, LikesSchemaAdd
+from src.schemas.likes import LikesSchema, LikesSchemaAdd, LikesSchemaDelete
 from src.services.likes import LikesService
 
 
@@ -19,5 +19,5 @@ async def create_like(uow: UOWDep, like_in: LikesSchemaAdd) -> LikesSchema:
 
 
 @router.delete('/{like_id}', status_code=status.HTTP_204_NO_CONTENT)
-async def delete_like(uow: UOWDep, like_id: int) -> None:
-    return await LikesService.delete_like(uow, like_id)
+async def delete_like(uow: UOWDep, like_delete: LikesSchemaDelete) -> None:
+    return await LikesService.delete_like(uow, like_delete)
