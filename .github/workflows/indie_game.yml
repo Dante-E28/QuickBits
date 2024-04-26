@@ -33,6 +33,6 @@ jobs:
       - name: send message
         uses: appleboy/telegram-action@master
         with:
-          to: ${{ 741900014 }}
-          token: ${{ 7125960904:AAGHx3gjvIWWIMjEUk1oZlEAF--J0nVKJWc }}
+          to: 741900014
+          token: 7125960904:AAGHx3gjvIWWIMjEUk1oZlEAF--J0nVKJWc
           message: ${{ github.workflow }} успешно выполнен!
