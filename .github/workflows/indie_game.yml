@@ -14,7 +14,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest pytest-dotenv pytest-asyncio
       - name: Test with Pytest
-        run: pytest
+        run: python -m pytest indie_game/tests/
 
   deploy:
     runs-on: ubuntu-latest
