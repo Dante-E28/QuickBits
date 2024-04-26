@@ -1,9 +1,12 @@
 name: Indie_game
 on: push
 jobs:
-  build:
+  telegram:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Telegram Notification
-        run: |
-          curl --data chat_id=${{ secrets.TELEGRAM_TO_1 }} --data-urlencode "text=Новый коммит в репозиторий! ${{ github.repository }}" "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage"
+    - name: Telegram Notification
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO_1 }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: "New File Pushed to the repository"
