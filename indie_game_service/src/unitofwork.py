@@ -37,7 +37,6 @@ class UnitOfWork(IUnitOfWork):
 
     def __init__(self):
         self.session_factory = new_session
-        self.engine = engine
 
     async def __aenter__(self):
         self.session = self.session_factory()
@@ -48,7 +47,6 @@ class UnitOfWork(IUnitOfWork):
 
     async def __aexit__(self, *args):
         await self.rollback()
-        await self.engine.dispose()
         await self.session.close()
 
     async def commit(self):

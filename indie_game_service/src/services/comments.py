@@ -55,9 +55,9 @@ class CommentsService:
         """Edit comment"""
         async with uow:
             comment = await uow.comments.update(
-                data=update_comment.model_dump(
-                    exclude_none=True), id=comment_id
-                )
+                data=update_comment.model_dump(exclude_none=True),
+                id=comment_id
+            )
             await uow.commit()
             return CommentsSchema.model_validate(comment)
 

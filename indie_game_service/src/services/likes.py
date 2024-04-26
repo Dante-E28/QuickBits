@@ -26,7 +26,7 @@ class LikesService:
                 raise EntityAlreadyExistsError('Like')
 
     @staticmethod
-    async def get_likes_for_post(
+    async def get_likes(
         uow: IUnitOfWork,
         post_id: int
     ) -> list[LikesSchema]:
