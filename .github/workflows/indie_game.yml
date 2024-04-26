@@ -12,9 +12,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-dotenv pytest-asyncio
+          pip install -r indie_game_service/requirements.txt
       - name: Test with Pytest
-        run: python -m pytest indie_game/tests/
+        run: python -m pytest indie_game_service/tests/
 
   deploy:
     runs-on: ubuntu-latest
