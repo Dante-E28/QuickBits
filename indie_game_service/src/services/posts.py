@@ -1,7 +1,7 @@
-from src.exceptions import EntityNotFoundError
+from src.exceptions import EntityAlreadyExistsError, EntityNotFoundError
 from src.schemas.posts import PostsSchema, PostsSchemaAdd, PostsSchemaUpdate
 from src.unitofwork import IUnitOfWork
-
+from sqlalchemy.exc import IntegrityError
 
 class PostsService:
 
@@ -12,9 +12,12 @@ class PostsService:
     ) -> PostsSchema:
         """Add post"""
         async with uow:
-            result = await uow.posts.add(post.model_dump())
-            await uow.commit()
-            return PostsSchema.model_validate(result)
+            try:
+                result = await uow.posts.add(post.model_dump())
+                await uow.commit()
+                return PostsSchema.model_validate(result)
+            except IntegrityError:
+                raise EntityAlreadyExistsError('Post')
 
     @staticmethod
     async def get_posts(
@@ -47,8 +50,8 @@ class PostsService:
         """Edit post"""
         async with uow:
             result = await uow.posts.update(
-                data=update_post.model_dump(
-                    exclude_none=True), id=post_id
+                data=update_post.model_dump(exclude_none=True),
+                id=post_id
             )
             await uow.commit()
             return PostsSchema.model_validate(result)
