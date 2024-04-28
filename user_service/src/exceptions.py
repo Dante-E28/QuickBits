@@ -1,5 +1,7 @@
 from fastapi import HTTPException, status
 
+from src.constants import ACCESS_TOKEN_TYPE
+
 
 class InvalidCredentialsError(HTTPException):
     def __init__(self):
@@ -14,6 +16,14 @@ class InvalidTokenCustomError(HTTPException):
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={'msg': 'Invalid token.'}
+        )
+
+
+class InvalidTokenTypeError(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={'msg': f'Token type not {ACCESS_TOKEN_TYPE!r}.'}
         )
 
 
