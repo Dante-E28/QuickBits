@@ -1,38 +1,30 @@
-from typing import Annotated
 from fastapi import APIRouter, Depends
-from fastapi.security import OAuth2PasswordRequestForm
 
-from src.dependencies import get_current_user, oauth2_schema # noqa
-from src.exceptions import InvalidCredentialsError
-from src.fake_service import UOWDep, AuthService, UserService
+from src.services import AuthService
+from src.dependencies import UOWDep, get_current_user, validate_auth_user
+from src.fake_service import UserService
 from src.schemas import Token, UserCreate, UserRead
-from src.utils import encode_jwt
 
 
 auth_router = APIRouter(prefix='/auth', tags=['Auth'])
 user_router = APIRouter(prefix='/user', tags=['User'])
 
 
-@auth_router.post('/login')
+@auth_router.post('/login', response_model=Token)
 async def login(
-    uow: UOWDep,
-    credentials: Annotated[OAuth2PasswordRequestForm, Depends()]
+    user: UserRead = Depends(validate_auth_user)
 ):
-    user = await AuthService.authenticate_user(
-        uow,
-        credentials.username,
-        credentials.password
-    )
-    if not user:
-        raise InvalidCredentialsError
-    payload: dict = {
-        'sub': user.username,
-    }
-    token = encode_jwt(payload)
+    access_token = AuthService.create_access_token(user)
+    refresh_token = AuthService.create_refresh_token(user)
     return Token(
-        access_token=token,
-        token_type='Bearer'
+        access_token=access_token,
+        refresh_token=refresh_token
     )
+
+
+@auth_router.post('/refresh', response_model=Token)
+async def refresh_token():
+    pass
 
 
 @user_router.post('', response_model=UserRead)
