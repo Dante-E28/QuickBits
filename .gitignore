@@ -151,3 +151,8 @@ dmypy.json
 
 # логи
 logs/
+
+/certs
+
+docker-compose.yml
+docker-compose
