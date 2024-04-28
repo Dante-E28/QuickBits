@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from src.services import AuthService
-from src.dependencies import UOWDep, get_current_user, validate_auth_user
+from src.dependencies import UOWDep, get_current_user_for_refresh, get_verified_user, validate_auth_user
 from src.fake_service import UserService
 from src.schemas import Token, UserCreate, UserRead
 
@@ -22,9 +22,18 @@ async def login(
     )
 
 
-@auth_router.post('/refresh', response_model=Token)
-async def refresh_token():
-    pass
+@auth_router.post(
+    '/refresh',
+    response_model=Token,
+    response_model_exclude_none=True
+)
+async def refresh_token(
+    user: UserRead = Depends(get_current_user_for_refresh)
+):
+    access_token = AuthService.create_access_token(user)
+    return Token(
+        access_token=access_token
+    )
 
 
 @user_router.post('', response_model=UserRead)
@@ -37,6 +46,6 @@ async def register_user(
 
 @user_router.get('/me', response_model=UserRead)
 async def get_me(
-    current_user: UserRead = Depends(get_current_user)
+    current_user: UserRead = Depends(get_verified_user)
 ) -> UserRead:
     return current_user

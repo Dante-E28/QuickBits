@@ -1,4 +1,7 @@
 from datetime import timedelta
+
+from src.exceptions import InvalidTokenCustomError
+from src.fake_service import UserService
 from src.config import settings
 from src.constants import (
     ACCESS_TOKEN_TYPE,
@@ -84,3 +87,17 @@ class AuthService:
             expire_timedelta=timedelta(
                 days=settings.auth_settings.refresh_token_expire_days)
         )
+
+    @staticmethod
+    async def get_user_by_token_sub(
+        uow: IUnitOfWork,
+        payload: dict
+    ) -> UserRead:
+        """Gets user from token 'sub'."""
+        username: str | None = payload.get('sub')
+        if not username:
+            raise InvalidTokenCustomError
+        user = await UserService.get_user(uow, username)
+        if not user:
+            raise InvalidTokenCustomError
+        return UserRead.model_validate(user)
