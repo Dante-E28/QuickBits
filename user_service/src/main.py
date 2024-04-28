@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from src.database import create_table
+from src.router import router as users_router
 
 
 @asynccontextmanager
@@ -9,4 +10,7 @@ async def lifespan(app: FastAPI):
     yield
     print('Конец приложения')
 
-app = FastAPI(title='Инди Сервис', lifespan=lifespan)
+app = FastAPI(title='Юзер Сервис', lifespan=lifespan)
+
+
+app.include_router(users_router, prefix='/users', tags=['Users'])
