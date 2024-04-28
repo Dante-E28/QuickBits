@@ -13,16 +13,16 @@ class UserBase(BaseModel):
     email: EmailStr | None = None
 
 
-class UserCreate(BaseModel):
+class UserCreate(UserBase):
     username: str
     password: str
 
 
-class UserUpdate(BaseModel):
+class UserUpdate(UserBase):
     password: str | None = None
 
 
-class UserRead(BaseModel):
+class UserRead(UserBase):
     id: uuid.UUID
     username: str
     email: EmailStr
