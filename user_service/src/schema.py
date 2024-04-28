@@ -1,19 +1,34 @@
-from uuid import UUID
-from pydantic import BaseModel
+import uuid
+
+from pydantic import BaseModel, EmailStr
 
 
-class UsersSchemaBase(BaseModel):
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class UserBase(BaseModel):
+    username: str | None = None
+    email: EmailStr | None = None
+
+
+class UserCreate(BaseModel):
     username: str
-    email: str | None = None
-    hashed_password: bytes
+    password: str
 
 
-class UsersSchema(UsersSchemaBase):
-    id: UUID
+class UserUpdate(BaseModel):
+    password: str | None = None
+
+
+class UserRead(BaseModel):
+    id: uuid.UUID
+    username: str
+    email: EmailStr
     is_active: bool
     is_verified: bool
     is_superuser: bool
 
-
-class UsersSchemaAdd(UsersSchemaBase):
-    pass
+    class Config:
+        from_attributes = True
