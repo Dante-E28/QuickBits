@@ -31,7 +31,7 @@ class DBSettings(EnvBaseSettings):
 class AuthSettings(BaseModel):
     private_key_path: Path = BASE_DIR / 'certs' / 'private.pem'
     public_key_path: Path = BASE_DIR / 'certs' / 'public.pem'
-    algorithm: str = 'HS256'
+    algorithm: str = 'RS256'
     access_token_expire_minutes: int = 15
 
 
