@@ -4,20 +4,19 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 
-from src.constants import ACCESS_TOKEN_TYPE, TOKEN_TYPE_FIELD
+from src.constants import ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE
 from src.exceptions import (
     InvalidCredentialsError,
     InvalidTokenCustomError,
-    InvalidTokenTypeError,
     NotPrivilegesError,
     UserNotActiveError,
     UserNotVerifiedError
 )
-from src.fake_service import UserService
 from src.schemas import UserRead
 from src.services import AuthService
 from src.utils import decode_jwt
 from src.unitofwork import IUnitOfWork, UnitOfWork
+from src.validation import validate_token_type
 
 
 UOWDep = Annotated[IUnitOfWork, Depends(UnitOfWork)]
@@ -38,22 +37,28 @@ async def get_current_user(
     uow: UOWDep,
     payload: dict = Depends(get_current_payload)
 ) -> UserRead:
-    token_type = payload.get(TOKEN_TYPE_FIELD)
-    if token_type != ACCESS_TOKEN_TYPE:
-        raise InvalidTokenTypeError
-    username: str | None = payload.get('sub')
-    if not username:
-        raise InvalidTokenCustomError
-    user = await UserService.get_user(uow, username)
-    if not user:
-        raise InvalidTokenCustomError
-    if not user.is_verified:
+    validate_token_type(payload, ACCESS_TOKEN_TYPE)
+    return await AuthService.get_user_by_token_sub(uow, payload)
+
+
+async def get_current_user_for_refresh(
+    uow: UOWDep,
+    payload: dict = Depends(get_current_payload)
+) -> UserRead:
+    validate_token_type(payload, REFRESH_TOKEN_TYPE)
+    return await AuthService.get_user_by_token_sub(uow, payload)
+
+
+async def get_verified_user(
+    current_user: UserRead = Depends(get_current_user)
+) -> UserRead:
+    if not current_user.is_verified:
         raise UserNotVerifiedError
-    return UserRead.model_validate(user)
+    return current_user
 
 
 async def get_active_user(
-    current_user: UserRead = Depends(get_current_user)
+    current_user: UserRead = Depends(get_verified_user)
 ) -> UserRead:
     if not current_user.is_active:
         raise UserNotActiveError
