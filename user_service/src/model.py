@@ -9,8 +9,8 @@ class Users(Model):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     username: Mapped[str] = mapped_column(String(50), unique=True)
-    email: Mapped[str] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(unique=True)
     hashed_password: Mapped[bytes]
-    is_active: Mapped[bool] = mapped_column(default=False)
+    is_active: Mapped[bool] = mapped_column(default=True)
     is_verified: Mapped[bool] = mapped_column(default=False)
     is_superuser: Mapped[bool] = mapped_column(default=False)
