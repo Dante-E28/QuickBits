@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends
 
-from src.services import AuthService, UserService
-from src.dependencies import (
+from src.users.services import AuthService, UserService
+from src.users.dependencies import (
     UOWDep,
     get_current_user_for_refresh,
     get_verified_user,
     validate_auth_user
 )
-from src.schemas import Token, UserCreate, UserRead
+from src.users.schemas import Token, UserCreate, UserRead
 
 
 auth_router = APIRouter(prefix='/auth', tags=['Auth'])

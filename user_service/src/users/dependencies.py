@@ -12,11 +12,11 @@ from src.exceptions import (
     UserNotActiveError,
     UserNotVerifiedError
 )
-from src.schemas import UserRead
-from src.services import AuthService
-from src.utils import decode_jwt
-from src.unitofwork import IUnitOfWork, UnitOfWork
-from src.validation import validate_token_type
+from src.users.schemas import UserRead
+from src.users.services import AuthService
+from src.users.utils import decode_jwt
+from src.repositories.unitofwork import IUnitOfWork, UnitOfWork
+from src.users.validation import validate_token_type
 
 
 UOWDep = Annotated[IUnitOfWork, Depends(UnitOfWork)]
