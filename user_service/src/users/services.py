@@ -1,4 +1,5 @@
 from datetime import timedelta
+import uuid
 
 from src.exceptions import EntityNotFoundError, InvalidTokenCustomError
 from src.config import settings
@@ -8,7 +9,7 @@ from src.constants import (
     TOKEN_TYPE_FIELD
 )
 from src.repositories.unitofwork import IUnitOfWork
-from src.users.schemas import UserRead, UserCreate
+from src.users.schemas import UserRead, UserCreate, UserUpdate
 from src.users.utils import encode_jwt, validate_password, hash_password
 
 
@@ -30,7 +31,7 @@ class UserService:
     @staticmethod
     async def get_user(
         uow: IUnitOfWork,
-        user_id: int
+        user_id: uuid.UUID
     ) -> UserRead:
         async with uow:
             result = await uow.users.get(id=user_id)
@@ -38,6 +39,15 @@ class UserService:
                 return UserRead.model_validate(result)
             else:
                 raise EntityNotFoundError('User', user_id)
+
+    @staticmethod
+    async def get_user_by_username(
+        uow: IUnitOfWork,
+        username: str
+    ) -> UserRead:
+        async with uow:
+            result = await uow.users.get(username=username)
+            return UserRead.model_validate(result)
 
     @staticmethod
     async def get_users(
@@ -48,9 +58,52 @@ class UserService:
             return [UserRead.model_validate(user) for user in users]
 
     @staticmethod
+    async def edit_user(
+        uow: IUnitOfWork,
+        user_update: UserUpdate,
+        user_id: uuid.UUID
+    ) -> UserRead:
+        if user_update.password:
+            hashed_password = hash_password(user_update.password)
+            data = user_update.model_dump(
+                exclude={'password'}, exclude_none=True
+            )
+            data['hashed_password'] = hashed_password
+        async with uow:
+            result = await uow.users.update(data, id=user_id)
+            await uow.commit()
+            return UserRead.model_validate(result)
+
+    @staticmethod
+    async def edit_me(
+        uow: IUnitOfWork,
+        user_update: UserUpdate,
+        user_id: uuid.UUID
+    ) -> UserRead:
+        if user_update.password:
+            hashed_password = hash_password(user_update.password)
+            data = user_update.model_dump(
+                exclude={'password'}, exclude_none=True
+            )
+            data['hashed_password'] = hashed_password
+        async with uow:
+            result = await uow.users.update(data, id=user_id)
+            await uow.commit()
+            return UserRead.model_validate(result)
+
+    @staticmethod
     async def delete_user(
         uow: IUnitOfWork,
-        user_id: int
+        user_id: uuid.UUID
+    ) -> None:
+        async with uow:
+            await uow.users.delete(id=user_id)
+            await uow.commit()
+
+    @staticmethod
+    async def delete_me(
+        uow: IUnitOfWork,
+        user_id: uuid.UUID
     ) -> None:
         async with uow:
             await uow.users.delete(id=user_id)
