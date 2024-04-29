@@ -1,7 +1,9 @@
 from datetime import timedelta
+import uuid
 
-from src.exceptions import InvalidTokenCustomError
-from src.fake_service import UserService
+import bcrypt
+
+from src.exceptions import EntityNotFoundError, InvalidTokenCustomError
 from src.config import settings
 from src.constants import (
     ACCESS_TOKEN_TYPE,
@@ -10,20 +12,52 @@ from src.constants import (
 )
 from src.unitofwork import IUnitOfWork
 from src.schemas import UserRead, UserCreate
-from src.utils import encode_jwt, validate_password
+from src.utils import encode_jwt, validate_password, hash_password
 
 
-class UsersService:
+class UserService:
 
     @staticmethod
-    async def add_user(
+    async def register_user(
         uow: IUnitOfWork,
-        user: UserCreate
+        user_in: UserCreate
     ) -> UserRead:
+        hashed_password = hash_password(user_in.password)
+        data = user_in.model_dump(exclude={'password'})
+        data['hashed_password'] = hashed_password
         async with uow:
-            result = await uow.users.add(user.model_dump())
+            result = await uow.users.add(data)
             await uow.commit()
             return UserRead.model_validate(result)
+
+    @staticmethod
+    async def get_user(
+        uow: IUnitOfWork,
+        user_id: int
+    ) -> UserRead:
+        async with uow:
+            result = await uow.users.get(id=user_id)
+            if result:
+                return UserRead.model_validate(result)
+            else:
+                raise EntityNotFoundError('User', user_id)
+
+    @staticmethod
+    async def get_users(
+        uow: IUnitOfWork,
+    ) -> list[UserRead]:
+        async with uow:
+            users = await uow.users.get_all()
+            return [UserRead.model_validate(user) for user in users]
+
+    @staticmethod
+    async def delete_user(
+        uow: IUnitOfWork,
+        user_id: int
+    ) -> None:
+        async with uow:
+            await uow.users.delete(id=user_id)
+            await uow.commit()
 
 
 class AuthService:
