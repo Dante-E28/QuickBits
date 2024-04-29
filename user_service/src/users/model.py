@@ -1,7 +1,9 @@
 from uuid import UUID, uuid4
+
 from sqlalchemy import String
-from src.database import Model
 from sqlalchemy.orm import Mapped, mapped_column
+
+from src.database import Model
 
 
 class Users(Model):

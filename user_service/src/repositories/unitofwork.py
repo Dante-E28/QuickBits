@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
-from src.database import new_session, engine
-from src.model import Users
-from src.repository import UsersRepository
+from src.database import new_session
+from src.repositories.repository import UsersRepository
+from src.users.model import Users
 
 
 class IUnitOfWork(ABC):

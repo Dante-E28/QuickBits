@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
+
 from src.database import create_table
-from src.router import auth_router, user_router
+from src.users.router import auth_router, user_router
 
 
 @asynccontextmanager

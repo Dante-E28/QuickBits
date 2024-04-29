@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Any, Generic, Sequence, Type, TypeVar
-from pydantic import BaseModel
 
-from sqlalchemy import insert, select, update, delete
+from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.model import Users
 from src.database import Model
+from src.users.model import Users
 
 
 class AbstractRepository(ABC):
@@ -33,7 +32,6 @@ class AbstractRepository(ABC):
 
 
 ModelType = TypeVar('ModelType', bound=Model)
-CreateSchemaType = TypeVar('CreateSchemaType', bound=BaseModel)
 
 
 class SQLAlchemyRepository(AbstractRepository, Generic[ModelType]):
