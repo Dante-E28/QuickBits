@@ -1,6 +1,10 @@
 import uuid
+from typing import Annotated
 
+from annotated_types import MaxLen, MinLen
 from pydantic import BaseModel, EmailStr
+
+from src.users.mixin import PasswordValidatorMixin, UsernameValidatorMixin
 
 
 class Token(BaseModel):
@@ -14,12 +18,16 @@ class UserBase(BaseModel):
     email: EmailStr | None = None
 
 
-class UserCreate(UserBase):
-    username: str
-    password: str
+class UserCreate(
+    UserBase,
+    PasswordValidatorMixin,
+    UsernameValidatorMixin
+):
+    username: Annotated[str, MinLen(4), MaxLen(16)]
+    password: Annotated[str, MinLen(6)]
 
 
-class UserUpdate(UserBase):
+class UserUpdate(UserBase, PasswordValidatorMixin):
     password: str | None = None
 
 
