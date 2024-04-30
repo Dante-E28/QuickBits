@@ -1,3 +1,4 @@
+import uuid
 from fastapi import HTTPException, status
 
 
@@ -50,7 +51,7 @@ class NotPrivilegesError(HTTPException):
 
 
 class EntityNotFoundError(HTTPException):
-    def __init__(self, entity_type: str, entity_id: int):
+    def __init__(self, entity_type: str, entity_id: uuid.UUID):
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f'{entity_type} id: {entity_id} not found'

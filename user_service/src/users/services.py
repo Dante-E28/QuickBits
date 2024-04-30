@@ -1,7 +1,12 @@
 from datetime import timedelta
 import uuid
 
-from src.exceptions import EntityNotFoundError, InvalidTokenCustomError
+from sqlalchemy.exc import IntegrityError
+
+from src.exceptions import (
+    EntityAlreadyExistsError, EntityNotFoundError,
+    InvalidTokenCustomError
+)
 from src.config import settings
 from src.constants import (
     ACCESS_TOKEN_TYPE,
@@ -24,9 +29,12 @@ class UserService:
         data = user_in.model_dump(exclude={'password'})
         data['hashed_password'] = hashed_password
         async with uow:
-            result = await uow.users.add(data)
-            await uow.commit()
-            return UserRead.model_validate(result)
+            try:
+                result = await uow.users.add(data)
+                await uow.commit()
+                return UserRead.model_validate(result)
+            except IntegrityError:
+                raise EntityAlreadyExistsError('User')
 
     @staticmethod
     async def get_user(
@@ -41,7 +49,7 @@ class UserService:
                 raise EntityNotFoundError('User', user_id)
 
     @staticmethod
-    async def get_user_by_username(
+    async def get_me(
         uow: IUnitOfWork,
         username: str
     ) -> UserRead:
