@@ -8,9 +8,8 @@ from src.users.router import auth_router, user_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await create_table()
     yield
-    print('Конец приложения')
+
 
 app = FastAPI(title='Юзер Сервис', lifespan=lifespan)
 
