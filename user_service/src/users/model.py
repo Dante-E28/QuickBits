@@ -9,8 +9,10 @@ from src.database import Model
 class Users(Model):
     __tablename__ = 'users'
 
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    username: Mapped[str] = mapped_column(String(50), unique=True)
+    id: Mapped[UUID] = mapped_column(
+        primary_key=True, index=True, default=uuid4
+    )
+    username: Mapped[str] = mapped_column(index=True, unique=True)
     email: Mapped[str] = mapped_column(unique=True)
     hashed_password: Mapped[bytes]
     is_active: Mapped[bool] = mapped_column(default=True)
