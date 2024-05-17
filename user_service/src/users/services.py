@@ -189,7 +189,7 @@ class AuthService:
         username: str | None = payload.get('sub')
         if not username:
             raise InvalidTokenCustomError
-        user = await UserService.get_user_by_username(uow, username)
+        user = await UserService.get_me(uow, username)
         if not user:
             raise InvalidTokenCustomError
         return UserRead.model_validate(user)
