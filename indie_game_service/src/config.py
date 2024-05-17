@@ -23,7 +23,14 @@ class DBSettings(EnvBaseSettings):
         return f'postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.POSTGRES_DB}'
 
 
-class Settings(DBSettings):
+class RabbitMQ(BaseSettings):
+    RABBITMQ_USER: str
+    RABBITMQ_PASS: str
+    RABBITMQ_HOST: str
+    RABBITMQ_PORT: int
+
+
+class Settings(DBSettings, RabbitMQ):
     DEBUG: bool = True
 
 

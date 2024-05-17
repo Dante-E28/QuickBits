@@ -104,6 +104,7 @@ celerybeat.pid
 # Environments
 .env
 .test.env
+.prod.env
 .venv
 env/
 venv/
@@ -158,3 +159,8 @@ fake_service.py
 
 docker-compose.yml
 docker-compose
+__docker-compose.yml
+
+#poetry
+poetry.lock
+pyproject.toml

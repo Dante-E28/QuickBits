@@ -37,7 +37,14 @@ class AuthSettings(BaseModel):
     refresh_token_expire_days: int = 30
 
 
-class Settings(DBSettings):
+class RabbitMQ(BaseSettings):
+    RABBITMQ_USER: str
+    RABBITMQ_PASS: str
+    RABBITMQ_HOST: str
+    RABBITMQ_PORT: int
+
+
+class Settings(DBSettings, RabbitMQ):
     DEBUG: bool = True
 
     auth_settings: AuthSettings = AuthSettings()
