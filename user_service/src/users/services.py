@@ -49,7 +49,7 @@ class UserService:
                 raise EntityNotFoundError('User', user_id)
 
     @staticmethod
-    async def get_me(
+    async def get_user_by_username(
         uow: IUnitOfWork,
         username: str
     ) -> UserRead:

@@ -42,3 +42,7 @@ class UserRead(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class MessageWithUser(BaseModel):
+    user_id: str
