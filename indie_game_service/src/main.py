@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
-from src.database import create_table
+from src.rabbitmq.client import rabbit_connection, rabbit_client
 from src.routers.comments_router import router as comments_router
 from src.routers.likes_router import router as likes_router
 from src.routers.posts_router import router as posts_router
@@ -9,9 +9,11 @@ from src.routers.posts_router import router as posts_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await create_table()
+    await rabbit_connection.connect()
+    rabbit_client.channel = rabbit_connection.channel
+    app.state.rabbit_client = rabbit_client
     yield
-    print('Конец приложения')
+    await rabbit_connection.close()
 
 app = FastAPI(title='Инди Сервис', lifespan=lifespan)
 
