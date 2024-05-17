@@ -2,12 +2,17 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from src.rabbitmq.server import RabbitServer
 from src.users.router import auth_router, user_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global rabbit_server
+    rabbit_server = await RabbitServer.create_server()
+    app.state.rabbit_server = rabbit_server
     yield
+    await rabbit_server.close_connection()
 
 
 app = FastAPI(title='Юзер Сервис', lifespan=lifespan)
