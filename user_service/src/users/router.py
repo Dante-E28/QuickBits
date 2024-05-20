@@ -1,6 +1,7 @@
 import uuid
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Response, status
 
+from src.constants import ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE
 from src.users.services import AuthService, UserService
 from src.users.dependencies import (
     UOWDep,
@@ -9,6 +10,7 @@ from src.users.dependencies import (
     validate_auth_user
 )
 from src.users.schemas import Token, UserCreate, UserRead, UserUpdate
+from src.users.utils import set_cookies
 
 
 auth_router = APIRouter(prefix='/auth', tags=['Auth'])
@@ -17,14 +19,29 @@ user_router = APIRouter(prefix='/user', tags=['User'])
 
 @auth_router.post('/login', response_model=Token)
 async def login(
+    response: Response,
     user: UserRead = Depends(validate_auth_user)
-):
+) -> Token:
     access_token = AuthService.create_access_token(user)
     refresh_token = AuthService.create_refresh_token(user)
+    set_cookies(
+        response=response,
+        access_token=access_token,
+        refresh_token=refresh_token
+    )
     return Token(
         access_token=access_token,
         refresh_token=refresh_token
     )
+
+
+@auth_router.post('/logout', status_code=status.HTTP_200_OK)
+async def logout(
+    response: Response
+):
+    response.delete_cookie(ACCESS_TOKEN_TYPE)
+    response.delete_cookie(REFRESH_TOKEN_TYPE)
+    return {'message': 'You are logouted!'}
 
 
 @auth_router.post(
@@ -33,9 +50,11 @@ async def login(
     response_model_exclude_none=True
 )
 async def refresh_token(
+    response: Response,
     user: UserRead = Depends(get_current_user_for_refresh)
 ):
     access_token = AuthService.create_access_token(user)
+    set_cookies(response=response, access_token=access_token)
     return Token(
         access_token=access_token
     )
