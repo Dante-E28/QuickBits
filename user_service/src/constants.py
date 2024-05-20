@@ -9,3 +9,7 @@ naming_convention = {
       "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
       "pk": "pk_%(table_name)s",
     }
+
+# Expire time config.
+SECONDS_IN_MINUTE = 60
+SECONDS_IN_DAY = 86400

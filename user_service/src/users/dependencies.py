@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 
 from src.constants import ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE
@@ -14,17 +14,18 @@ from src.exceptions import (
 )
 from src.users.schemas import UserRead
 from src.users.services import AuthService
-from src.users.utils import decode_jwt
+from src.users.utils import OAuth2PasswordBearerWithCookie, decode_jwt
 from src.repositories.unitofwork import IUnitOfWork, UnitOfWork
 from src.users.validation import validate_token_type
 
 
 UOWDep = Annotated[IUnitOfWork, Depends(UnitOfWork)]
-oauth2_schema = OAuth2PasswordBearer(tokenUrl='/auth/login')
+oauth2_schema_cookie = OAuth2PasswordBearerWithCookie(
+    tokenUrl='/auth/login', token_type=ACCESS_TOKEN_TYPE)
 
 
 def get_current_payload(
-    token: Annotated[str, Depends(oauth2_schema)]
+    token: Annotated[str, Depends(oauth2_schema_cookie)]
 ) -> dict:
     try:
         payload = decode_jwt(token)

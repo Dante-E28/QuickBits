@@ -1,10 +1,21 @@
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, cast
 
 import bcrypt
+from fastapi import Request, Response
+from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
+from fastapi.security import OAuth2
+from fastapi.security.utils import get_authorization_scheme_param
 import jwt
 
 from src.config import settings
+from src.constants import (
+    ACCESS_TOKEN_TYPE,
+    REFRESH_TOKEN_TYPE,
+    SECONDS_IN_DAY,
+    SECONDS_IN_MINUTE
+)
+from src.exceptions import NotAuthenticatedError
 
 
 def hash_password(password: str) -> bytes:
@@ -49,3 +60,68 @@ def decode_jwt(
     algorithm: str = settings.auth_settings.algorithm,
 ):
     return jwt.decode(token, public_key, algorithms=[algorithm])
+
+
+ACCESS_EXPIRE = settings.auth_settings.access_token_expire_minutes
+REFRESH_EXPIRE = settings.auth_settings.refresh_token_expire_days
+
+
+def set_cookies(
+    response: Response,
+    access_token: str | None = None,
+    refresh_token: str | None = None
+) -> None:
+    """Set cookies in response."""
+    if access_token:
+        response.set_cookie(
+            key=ACCESS_TOKEN_TYPE,
+            value='Bearer ' + access_token,
+            max_age=ACCESS_EXPIRE * SECONDS_IN_MINUTE,
+            httponly=True,
+            secure=False,
+            samesite='strict'
+        )
+
+    if refresh_token:
+        response.set_cookie(
+            key=REFRESH_TOKEN_TYPE,
+            value='Bearer ' + refresh_token,
+            max_age=REFRESH_EXPIRE * SECONDS_IN_DAY,
+            httponly=True,
+            secure=False,
+            samesite='strict'
+        )
+
+
+class OAuth2PasswordBearerWithCookie(OAuth2):
+    def __init__(
+        self,
+        tokenUrl: str,
+        token_type: str,
+        scheme_name: str | None = None,
+        scopes: dict[str, str] | None = None,
+        description: str | None = None,
+        auto_error: bool = True,
+    ):
+        if not scopes:
+            scopes = {}
+        flows = OAuthFlowsModel(
+            password=cast(Any, {"tokenUrl": tokenUrl, "scopes": scopes})
+        )
+        self.token_type = token_type
+        super().__init__(
+            flows=flows,
+            scheme_name=scheme_name,
+            description=description,
+            auto_error=auto_error,
+        )
+
+    async def __call__(self, request: Request) -> str | None:
+        authorization = request.cookies.get(self.token_type)
+        scheme, param = get_authorization_scheme_param(authorization)
+        if not authorization or scheme.lower() != "bearer":
+            if self.auto_error:
+                raise NotAuthenticatedError
+            else:
+                return None
+        return param

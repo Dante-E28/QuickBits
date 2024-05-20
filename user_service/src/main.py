@@ -8,9 +8,7 @@ from src.users.router import auth_router, user_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global rabbit_server
     rabbit_server = await RabbitServer.create_server()
-    app.state.rabbit_server = rabbit_server
     yield
     await rabbit_server.close_connection()
 
