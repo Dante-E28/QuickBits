@@ -2,36 +2,41 @@ from typing import Annotated
 
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from jwt.exceptions import InvalidTokenError
 
 from src.constants import ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE
 from src.exceptions import (
     InvalidCredentialsError,
-    InvalidTokenCustomError,
     NotPrivilegesError,
     UserNotActiveError,
     UserNotVerifiedError
 )
 from src.users.schemas import UserRead
 from src.users.services import AuthService
-from src.users.utils import OAuth2PasswordBearerWithCookie, decode_jwt
+from src.users.utils import (
+    OAuth2PasswordBearerWithCookie,
+    get_payload_from_token
+)
 from src.repositories.unitofwork import IUnitOfWork, UnitOfWork
 from src.users.validation import validate_token_type
 
 
 UOWDep = Annotated[IUnitOfWork, Depends(UnitOfWork)]
 oauth2_schema_cookie = OAuth2PasswordBearerWithCookie(
-    tokenUrl='/auth/login', token_type=ACCESS_TOKEN_TYPE)
+    tokenUrl='/auth/token', token_type=ACCESS_TOKEN_TYPE)
+oauth2_schema_cookie_refresh = OAuth2PasswordBearerWithCookie(
+    tokenUrl='/refresh_token', token_type=REFRESH_TOKEN_TYPE)
 
 
 def get_current_payload(
     token: Annotated[str, Depends(oauth2_schema_cookie)]
 ) -> dict:
-    try:
-        payload = decode_jwt(token)
-    except InvalidTokenError:
-        raise InvalidTokenCustomError
-    return payload
+    return get_payload_from_token(token)
+
+
+def get_current_payload_for_refresh(
+    token: Annotated[str, Depends(oauth2_schema_cookie_refresh)]
+) -> dict:
+    return get_payload_from_token(token)
 
 
 async def get_current_user(
@@ -44,7 +49,7 @@ async def get_current_user(
 
 async def get_current_user_for_refresh(
     uow: UOWDep,
-    payload: dict = Depends(get_current_payload)
+    payload: dict = Depends(get_current_payload_for_refresh)
 ) -> UserRead:
     validate_token_type(payload, REFRESH_TOKEN_TYPE)
     return await AuthService.get_user_by_token_sub(uow, payload)
