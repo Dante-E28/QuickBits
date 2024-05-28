@@ -7,6 +7,7 @@ from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 from fastapi.security import OAuth2
 from fastapi.security.utils import get_authorization_scheme_param
 import jwt
+from jwt.exceptions import InvalidTokenError
 
 from src.config import settings
 from src.constants import (
@@ -15,7 +16,41 @@ from src.constants import (
     SECONDS_IN_DAY,
     SECONDS_IN_MINUTE
 )
-from src.exceptions import NotAuthenticatedError
+from src.exceptions import InvalidTokenCustomError, NotAuthenticatedError
+
+
+class OAuth2PasswordBearerWithCookie(OAuth2):
+    def __init__(
+        self,
+        tokenUrl: str,
+        token_type: str,
+        scheme_name: str | None = None,
+        scopes: dict[str, str] | None = None,
+        description: str | None = None,
+        auto_error: bool = True,
+    ):
+        if not scopes:
+            scopes = {}
+        flows = OAuthFlowsModel(
+            password=cast(Any, {"tokenUrl": tokenUrl, "scopes": scopes})
+        )
+        self.token_type = token_type
+        super().__init__(
+            flows=flows,
+            scheme_name=scheme_name,
+            description=description,
+            auto_error=auto_error,
+        )
+
+    async def __call__(self, request: Request) -> str | None:
+        authorization = request.cookies.get(self.token_type)
+        scheme, param = get_authorization_scheme_param(authorization)
+        if not authorization or scheme.lower() != "bearer":
+            if self.auto_error:
+                raise NotAuthenticatedError
+            else:
+                return None
+        return param
 
 
 def hash_password(password: str) -> bytes:
@@ -78,7 +113,7 @@ def set_cookies(
             value='Bearer ' + access_token,
             max_age=ACCESS_EXPIRE * SECONDS_IN_MINUTE,
             httponly=True,
-            secure=False,
+            secure=True,
             samesite='strict'
         )
 
@@ -88,40 +123,14 @@ def set_cookies(
             value='Bearer ' + refresh_token,
             max_age=REFRESH_EXPIRE * SECONDS_IN_DAY,
             httponly=True,
-            secure=False,
+            secure=True,
             samesite='strict'
         )
 
 
-class OAuth2PasswordBearerWithCookie(OAuth2):
-    def __init__(
-        self,
-        tokenUrl: str,
-        token_type: str,
-        scheme_name: str | None = None,
-        scopes: dict[str, str] | None = None,
-        description: str | None = None,
-        auto_error: bool = True,
-    ):
-        if not scopes:
-            scopes = {}
-        flows = OAuthFlowsModel(
-            password=cast(Any, {"tokenUrl": tokenUrl, "scopes": scopes})
-        )
-        self.token_type = token_type
-        super().__init__(
-            flows=flows,
-            scheme_name=scheme_name,
-            description=description,
-            auto_error=auto_error,
-        )
-
-    async def __call__(self, request: Request) -> str | None:
-        authorization = request.cookies.get(self.token_type)
-        scheme, param = get_authorization_scheme_param(authorization)
-        if not authorization or scheme.lower() != "bearer":
-            if self.auto_error:
-                raise NotAuthenticatedError
-            else:
-                return None
-        return param
+def get_payload_from_token(token: str) -> dict:
+    try:
+        payload = decode_jwt(token)
+    except InvalidTokenError:
+        raise InvalidTokenCustomError
+    return payload
