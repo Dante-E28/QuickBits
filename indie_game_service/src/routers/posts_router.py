@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 
 from src.deps import UOWDep
 from src.schemas.posts import PostsSchema, PostsSchemaAdd, PostsSchemaUpdate
+from src.security.dependencies import get_common_permission
 from src.services.posts import PostsService
 
 router = APIRouter()
@@ -17,7 +18,11 @@ async def get_post(uow: UOWDep, post_id: int) -> PostsSchema:
     return await PostsService.get_post(uow, post_id)
 
 
-@router.post('', response_model=PostsSchema)
+@router.post(
+    '',
+    response_model=PostsSchema,
+    dependencies=[Depends(get_common_permission)]
+)
 async def create_post(uow: UOWDep, post_in: PostsSchemaAdd) -> PostsSchema:
     return await PostsService.add_post(uow, post_in)
 

@@ -1,3 +1,4 @@
+import uuid
 from sqlalchemy.exc import IntegrityError
 from src.exceptions import EntityNotFoundError, EntityAlreadyExistsError
 from src.schemas.likes import LikesSchema, LikesSchemaAdd, LikesSchemaDelete
@@ -38,7 +39,7 @@ class LikesService:
     async def get_like(
         uow: IUnitOfWork,
         post_id: int,
-        user_id: int
+        user_id: uuid.UUID
     ) -> bool:
         async with uow:
             result = await uow.likes.get(post_id=post_id, user_id=user_id)

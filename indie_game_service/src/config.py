@@ -30,7 +30,12 @@ class RabbitMQ(BaseSettings):
     RABBITMQ_PORT: int
 
 
-class Settings(DBSettings, RabbitMQ):
+class AuthSettings(EnvBaseSettings):
+    ALGORITHM: str = 'RS256'
+    ACCESS_TOKEN_TYPE: str = 'access'
+
+
+class Settings(AuthSettings, DBSettings, RabbitMQ):
     DEBUG: bool = True
 
 

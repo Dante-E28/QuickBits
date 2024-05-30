@@ -1,9 +1,10 @@
+import uuid
 from pydantic import BaseModel, PositiveInt
 
 
 class LikesSchemaBase(BaseModel):
     post_id: PositiveInt
-    user_id: PositiveInt
+    user_id: uuid.UUID
 
 
 class LikesSchema(LikesSchemaBase):

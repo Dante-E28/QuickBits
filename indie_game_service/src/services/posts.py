@@ -3,6 +3,7 @@ from src.schemas.posts import PostsSchema, PostsSchemaAdd, PostsSchemaUpdate
 from src.unitofwork import IUnitOfWork
 from sqlalchemy.exc import IntegrityError
 
+
 class PostsService:
 
     @staticmethod
