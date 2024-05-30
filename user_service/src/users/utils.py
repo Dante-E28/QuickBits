@@ -17,6 +17,7 @@ from src.constants import (
     SECONDS_IN_MINUTE
 )
 from src.exceptions import InvalidTokenCustomError, NotAuthenticatedError
+from src.users.schemas import UserRead
 
 
 class OAuth2PasswordBearerWithCookie(OAuth2):
@@ -134,3 +135,15 @@ def get_payload_from_token(token: str) -> dict:
     except InvalidTokenError:
         raise InvalidTokenCustomError
     return payload
+
+
+def get_roles_for_payload(user: UserRead) -> list[str]:
+    """Get list of roles for token payload."""
+    roles: list = []
+    if user.is_active:
+        roles.append('is_active')
+    if user.is_verified:
+        roles.append('is_verified')
+    if user.is_superuser:
+        roles.append('is_superuser')
+    return roles
