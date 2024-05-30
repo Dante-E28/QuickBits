@@ -15,7 +15,12 @@ from src.constants import (
 )
 from src.repositories.unitofwork import IUnitOfWork
 from src.users.schemas import UserRead, UserCreate, UserUpdate
-from src.users.utils import encode_jwt, validate_password, hash_password
+from src.users.utils import (
+    encode_jwt,
+    get_roles_for_payload,
+    validate_password,
+    hash_password
+)
 
 
 class UserService:
@@ -157,7 +162,8 @@ class AuthService:
         payload: dict = {
             'sub': user.username,
             'username': user.username,
-            'email': user.email
+            'email': user.email,
+            'roles': get_roles_for_payload(user)
         }
         return AuthService._create_jwt(
             token_type=ACCESS_TOKEN_TYPE,
