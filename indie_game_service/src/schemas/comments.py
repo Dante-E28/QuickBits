@@ -1,9 +1,10 @@
 from datetime import datetime
-from pydantic import BaseModel, PositiveInt
+import uuid
+from pydantic import BaseModel
 
 
 class CommentsSchemaBase(BaseModel):
-    user_id: PositiveInt
+    user_id: uuid.UUID
     text: str
 
 

@@ -1,4 +1,5 @@
 from datetime import datetime
+import uuid
 from pydantic import BaseModel
 from typing import Annotated, TypeVar
 
@@ -18,7 +19,7 @@ class Posts(Model):
     id: Mapped[intpk]
     name: Mapped[str] = mapped_column(String(50), unique=True)
     description: Mapped[str]
-    user_id: Mapped[int]
+    user_id: Mapped[uuid.UUID]
     date_create: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=func.now()
     )
@@ -39,7 +40,7 @@ class Comments(Model):
     post_id: Mapped[int] = mapped_column(
         ForeignKey('posts.id')
     )
-    user_id: Mapped[int]
+    user_id: Mapped[uuid.UUID]
     text: Mapped[str]
     date_create: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=func.now()
@@ -56,7 +57,7 @@ class Likes(Model):
     post_id: Mapped[int] = mapped_column(
         ForeignKey('posts.id')
     )
-    user_id: Mapped[int]
+    user_id: Mapped[uuid.UUID]
     post: Mapped['Posts'] = relationship(
         back_populates='likes',
     )

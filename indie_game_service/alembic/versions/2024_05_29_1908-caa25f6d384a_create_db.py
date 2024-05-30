@@ -1,8 +1,8 @@
-"""create tables
+"""create db
 
-Revision ID: e73fd95e793f
+Revision ID: caa25f6d384a
 Revises: 
-Create Date: 2024-05-14 18:42:58.507424
+Create Date: 2024-05-29 19:08:36.996669
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'e73fd95e793f'
+revision: str = 'caa25f6d384a'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,7 +24,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=50), nullable=False),
     sa.Column('description', sa.String(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.Column('date_create', sa.DateTime(timezone=True), nullable=False),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_posts')),
     sa.UniqueConstraint('name', name=op.f('uq_posts_name'))
@@ -32,7 +32,7 @@ def upgrade() -> None:
     op.create_table('comments',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('post_id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.Column('text', sa.String(), nullable=False),
     sa.Column('date_create', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['post_id'], ['posts.id'], name=op.f('fk_comments_post_id_posts')),
@@ -41,7 +41,7 @@ def upgrade() -> None:
     op.create_table('likes',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('post_id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.ForeignKeyConstraint(['post_id'], ['posts.id'], name=op.f('fk_likes_post_id_posts')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_likes'))
     )
