@@ -1,10 +1,11 @@
 import axios from "axios";
 import { useAuthStore } from "@/stores/auth.store";
 
-const POST_URL = 'http://localhost:8001';
+const INDIE_URL = 'http://localhost:8001';
+const AUTH_URL = 'http://localhost:8000';
 
 const postClient = axios.create({
-    baseURL: POST_URL,
+    baseURL: INDIE_URL + '/posts',
     withCredentials: true,
     headers: {
         Accept: 'application/json',
@@ -24,4 +25,20 @@ postClient.interceptors.request.use(async(config) => {
     return Promise.reject(error);
 });
 
-export default postClient;
+
+const authClient = axios.create({
+    baseURL: AUTH_URL + '/auth',
+    withCredentials: true
+});
+
+
+const userClient = axios.create({
+    baseURL: AUTH_URL + '/user',
+    withCredentials: true,
+    headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+    }
+});
+
+export { postClient, authClient, userClient };

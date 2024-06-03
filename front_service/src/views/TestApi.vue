@@ -1,8 +1,8 @@
 <script setup>
 import { useAuthStore } from '@/stores/auth.store';
-import AuthService from '@/services/auth.service';
 import { ref } from 'vue';
 import PostService from '@/services/post.service';
+import userService from '@/services/user.service';
 
 const user = ref(null);
 const posts = ref(null);
@@ -14,7 +14,7 @@ async function test() {
 }
 
 async function test2() {
-    user.value = await AuthService.fetchUser();
+    user.value = await userService.getMe();
 }
 
 async function testGetPosts() {

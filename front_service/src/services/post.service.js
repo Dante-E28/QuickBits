@@ -1,12 +1,13 @@
-import postClient from "./axios";
+import { postClient } from "./axios";
+import { performRequest } from "./requestHelper";
 
 class PostService {
     async getPosts() {
-        return postClient.get('/posts');
+        return await performRequest(() => postClient.get(''));
     }
 
-    async createPosts(post) {
-        return postClient.post('/posts', post);
+    async createPost(post) {
+        return await performRequest(() => postClient.post('', post));
     }
 }
 

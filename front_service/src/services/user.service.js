@@ -1,23 +1,13 @@
-import axios from "axios";
-
-const USER_URL = 'http://localhost:8000/user'
-
+import { userClient } from "./axios";
+import { performRequest } from "./requestHelper";
 
 class UserService {
+    async getMe() {
+        return await performRequest(() => userClient.get('/me'));
+    }
+
     async getUser(user_id) {
-        const formData = new FormData();
-        formData.append('user_id', user_id);
-        try {
-            const response = await axios.get(`${USER_URL}/${user_id}`, {
-                withCredentials: true
-            });
-            return {
-                'username': response.data.username // Предполагаем, что ответ содержит username
-            };
-        } catch (error) {
-            console.error(`Failed to fetch user with id ${user_id}`, error);
-            return null;
-        }
+        return await performRequest(() => userClient.get(`/${user_id}`));
     }
 }
 
