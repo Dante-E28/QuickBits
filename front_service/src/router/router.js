@@ -1,22 +1,22 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Greeting from "@/components/Greeting.vue";
-import Login from "@/components/Login.vue";
+import HomeView from '@/views/HomeView.vue';
+import LoginView from '@/views/auth/LoginView.vue';
+import CreatePostView from '@/views/CreatePostView.vue';
 import Post from '@/components/Post.vue';
 import PostDetail from '@/components/PostDetail.vue';
-import TestApi from '@/components/TestApi.vue';
-import CreatePost from '@/components/CreatePost.vue';
+import TestApi from '@/views/TestApi.vue';
 
 
 const routes = [
-    {path: "/", name: 'Home', component: Greeting},
-    {path: "/login", name: 'Login', component: Login},
+    {path: "/", name: 'HomeView', component: HomeView},
+    {path: "/login", name: 'LoginView', component: LoginView},
     {path: "/posts", name: 'Post', component: Post},
     {path: "/post_detail", name: 'PostDetail', component: PostDetail},
     {path: "/test", name: 'Test', component: TestApi},
     {
         path: "/create_post",
-        name: 'Create Post',
-        component: CreatePost,
+        name: 'CreatePostView',
+        component: CreatePostView,
         meta: { requiresAuth: true },
     }
 ]

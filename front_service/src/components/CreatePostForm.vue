@@ -10,7 +10,6 @@ const authStore = useAuthStore()
 
 
 async function submitPost() {
-  console.log(authStore.userInfo);
   const post = {
     'name': title.value,
     'description': content.value,
