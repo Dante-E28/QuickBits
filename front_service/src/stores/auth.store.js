@@ -1,30 +1,30 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import AuthService from '../services/auth.service';
+import userService from "@/services/user.service";
 
 export const useAuthStore = defineStore('auth', () => {
     const userInfo = ref(JSON.parse(localStorage.getItem('userInfo')));
     const accessExpire = ref(localStorage.getItem('accessExpire'));
 
     const login = async(username, password) => {
-        const authData = await AuthService.login(username, password);
-        if (authData.message == 'You are logged in!') {
-            const userData = await AuthService.fetchUser();
+        const responseData = await AuthService.login(username, password);
+        if (responseData) {
+            const userData = await userService.getMe();
             setUserData(userData);
-            setTokenData(authData.accessExpire);
+            setTokenData(responseData.expire);
         }
     };
 
-    const scheduleTokenRefresh = (delay) => {
-        setTimeout(async () => {
-            await refresh()
-        }, delay * 1000);
-    };
+    // const scheduleTokenRefresh = () => {
+    //     setTimeout(refresh, accessExpire.value - 60 * 1000);
+    // };
 
-    const setTokenData = (newAccessExpire) => {
-        accessExpire.value = new Date().getTime() + newAccessExpire * 1000;
-        localStorage.setItem('accessExpire', accessExpire.value);
-        scheduleTokenRefresh(newAccessExpire - 60);
+    const setTokenData = (expire) => {
+        const now = new Date().getTime();
+        const expireTime = now + expire * 1000;
+        accessExpire.value = expireTime;
+        localStorage.setItem('accessExpire', expireTime);
     };
 
     const setUserData = (userData) => {
@@ -32,20 +32,24 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.setItem('userInfo', JSON.stringify(userData));
     };
 
+    const deleteUserTokenData = () => {
+        userInfo.value = null;
+        accessExpire.value = null;
+        localStorage.removeItem('userInfo');
+        localStorage.removeItem('accessExpire');
+    };
+
     const logout = async() => {
-        const message = await AuthService.logout()
-        if (message == 'You are logged out!') {
-            userInfo.value = null;
-            accessExpire.value = null;
-            localStorage.removeItem('userInfo');
-            localStorage.removeItem('accessExpire');
+        const responseData = await AuthService.logout()
+        if (responseData) {
+            deleteUserTokenData();
         }
     };
 
     const refresh = async() => {
-        const authData = await AuthService.refresh();
-        if (authData.message == 'Token refreshed!') {
-            setTokenData(authData.accessExpire);
+        const responseData = await AuthService.refresh();
+        if (responseData) {
+            setTokenData(responseData.expire);
         } else {
             await logout();
         }
