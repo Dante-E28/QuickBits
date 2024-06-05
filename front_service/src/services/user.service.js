@@ -9,6 +9,10 @@ class UserService {
     async getUser(user_id) {
         return await performRequest(() => userClient.get(`/${user_id}`));
     }
+
+    async patchMe(user_data) {
+        return await performRequest(() => userClient.patch('/me', user_data));
+    }
 }
 
 export default new UserService();

@@ -4,8 +4,7 @@ import uuid
 from sqlalchemy.exc import IntegrityError
 
 from src.exceptions import (
-    EntityAlreadyExistsError, EntityNotFoundError,
-    InvalidTokenCustomError
+    EntityNotFoundError, InvalidTokenCustomError, UserAlreadyExistsError
 )
 from src.config import settings
 from src.constants import (
@@ -24,22 +23,41 @@ from src.users.utils import (
 
 
 class UserService:
+    @classmethod
+    async def _is_username_email_exists(
+        cls,
+        uow: IUnitOfWork,
+        username: str | None = None,
+        email: str | None = None
+    ) -> bool:
+        """Return True if username or email exists."""
+        if username:
+            if await uow.users.get(username=username):
+                return True
+        if email:
+            if await uow.users.get(email=email):
+                return True
+        return False
 
-    @staticmethod
+    @classmethod
     async def register_user(
+        cls,
         uow: IUnitOfWork,
         user_in: UserCreate
     ) -> UserRead:
-        hashed_password = hash_password(user_in.password)
-        data = user_in.model_dump(exclude={'password'})
-        data['hashed_password'] = hashed_password
         async with uow:
-            try:
-                result = await uow.users.add(data)
-                await uow.commit()
-                return UserRead.model_validate(result)
-            except IntegrityError:
-                raise EntityAlreadyExistsError('User')
+            if cls._is_username_email_exists(
+                uow=uow,
+                username=user_in.username,
+                email=user_in.email
+            ):
+                raise UserAlreadyExistsError
+            hashed_password = hash_password(user_in.password)
+            data = user_in.model_dump(exclude={'password'})
+            data['hashed_password'] = hashed_password
+            result = await uow.users.add(data)
+            await uow.commit()
+            return UserRead.model_validate(result)
 
     @staticmethod
     async def get_user(
@@ -70,36 +88,26 @@ class UserService:
             users = await uow.users.get_all()
             return [UserRead.model_validate(user) for user in users]
 
-    @staticmethod
+    @classmethod
     async def edit_user(
+        cls,
         uow: IUnitOfWork,
         user_update: UserUpdate,
         user_id: uuid.UUID
     ) -> UserRead:
-        if user_update.password:
-            hashed_password = hash_password(user_update.password)
+        async with uow:
+            if cls._is_username_email_exists(
+                uow=uow,
+                username=user_update.username,
+                email=user_update.email
+            ):
+                raise UserAlreadyExistsError
             data = user_update.model_dump(
                 exclude={'password'}, exclude_none=True
             )
-            data['hashed_password'] = hashed_password
-        async with uow:
-            result = await uow.users.update(data, id=user_id)
-            await uow.commit()
-            return UserRead.model_validate(result)
-
-    @staticmethod
-    async def edit_me(
-        uow: IUnitOfWork,
-        user_update: UserUpdate,
-        user_id: uuid.UUID
-    ) -> UserRead:
-        if user_update.password:
-            hashed_password = hash_password(user_update.password)
-            data = user_update.model_dump(
-                exclude={'password'}, exclude_none=True
-            )
-            data['hashed_password'] = hashed_password
-        async with uow:
+            if user_update.password:
+                hashed_password = hash_password(user_update.password)
+                data['hashed_password'] = hashed_password
             result = await uow.users.update(data, id=user_id)
             await uow.commit()
             return UserRead.model_validate(result)

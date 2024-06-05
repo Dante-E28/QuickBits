@@ -116,7 +116,7 @@ async def update_me(
     user_update: UserUpdate,
     current_user: UserRead = Depends(get_me)
 ) -> UserRead:
-    return await UserService.edit_me(uow, user_update, current_user.id)
+    return await UserService.edit_user(uow, user_update, current_user.id)
 
 
 @user_router.patch('/{user_id}', response_model=UserUpdate)

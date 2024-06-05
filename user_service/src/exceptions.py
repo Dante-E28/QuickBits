@@ -51,6 +51,14 @@ class UserNotActiveError(HTTPException):
         )
 
 
+class UserAlreadyExistsError(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={'msg': 'User already exists.'}
+        )
+
+
 class NotPrivilegesError(HTTPException):
     def __init__(self):
         super().__init__(

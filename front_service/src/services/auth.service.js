@@ -7,7 +7,7 @@ class AuthService {
         const formData = new FormData();
         formData.append('username', username);
         formData.append('password', password);
-        return await performRequest(() => authClient.post('/login'));
+        return await performRequest(() => authClient.post('/login', formData));
     }
 
     async logout() {

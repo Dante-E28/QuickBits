@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import HomeView from '@/views/HomeView.vue';
 import LoginView from '@/views/auth/LoginView.vue';
 import CreatePostView from '@/views/CreatePostView.vue';
+import ProfileView from '@/views/ProfileView.vue';
 import Post from '@/components/Post.vue';
 import PostDetail from '@/components/PostDetail.vue';
 import TestApi from '@/views/TestApi.vue';
@@ -17,7 +18,13 @@ const routes = [
         path: "/create_post",
         name: 'CreatePostView',
         component: CreatePostView,
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/profile',
+        name: 'ProfileView',
+        component: ProfileView,
+        meta: { requiresAuth: true }
     }
 ]
 

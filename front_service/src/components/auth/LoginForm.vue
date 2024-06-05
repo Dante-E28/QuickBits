@@ -8,11 +8,7 @@ const username = ref(null);
 const password = ref(null);
 
 async function handleLogin() {
-  try {
-    await authStore.login(username.value, password.value);
-  } catch(error) {
-    alert(error.response.data);
-  }
+  await authStore.login(username.value, password.value);
 }
 
 </script>
