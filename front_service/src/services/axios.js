@@ -4,6 +4,14 @@ import { useAuthStore } from "@/stores/auth.store";
 const INDIE_URL = 'http://localhost:8001';
 const AUTH_URL = 'http://localhost:8000';
 
+const postEndpointsToCheck = [
+    { url: '/posts', methods: ['POST'] }
+];
+
+const userEndpointsToCheck = [
+    { url: '/me', methods: ['PATCH'] }
+];
+
 const postClient = axios.create({
     baseURL: INDIE_URL + '/posts',
     withCredentials: true,
@@ -15,10 +23,13 @@ const postClient = axios.create({
 
 
 postClient.interceptors.request.use(async(config) => {
-    const authStore = useAuthStore();
-    const now = new Date().getTime();
-    if(authStore.accessExpire <= now) {
-        await authStore.refresh();
+    const shouldCheckToken = postEndpointsToCheck.some(endpoint => 
+        config.url.includes(endpoint.url) && endpoint.methods.includes(config.method.toUpperCase())
+    );
+    
+    if (shouldCheckToken) {
+        const authStore = useAuthStore();
+        await authStore.checkAuth();
     }
     return config;
 }, (error) => {
@@ -39,6 +50,21 @@ const userClient = axios.create({
         Accept: 'application/json',
         'Content-Type': 'application/json',
     }
+});
+
+
+userClient.interceptors.request.use(async(config) => {
+    const shouldCheckToken = userEndpointsToCheck.some(endpoint => 
+        config.url.includes(endpoint.url) && endpoint.methods.includes(config.method.toUpperCase())
+    );
+    
+    if (shouldCheckToken) {
+        const authStore = useAuthStore();
+        await authStore.checkAuth();
+    }
+    return config;
+}, (error) => {
+    return Promise.reject(error);
 });
 
 export { postClient, authClient, userClient };

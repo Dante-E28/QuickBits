@@ -47,7 +47,7 @@ class SQLAlchemyRepository(AbstractRepository, Generic[ModelType]):
         return res.scalar_one()
 
     async def get(self, **filters) -> ModelType | None:
-        """Gets a entity by its id."""
+        """Gets a entity by filter."""
         stmt = select(self.model).filter_by(**filters)
         res = await self.session.execute(stmt)
         return res.scalar_one_or_none()
