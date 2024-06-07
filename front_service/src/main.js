@@ -16,6 +16,12 @@ const pinia = createPinia()
 app.use(pinia);
 app.use(router);
 
+app.config.errorHandler = (err, vm, info) => {
+    console.error('Ошибка:', err);
+    console.error('Компонент:', vm);
+    console.error('Информация:', info);
+};
+
 const authStore = useAuthStore();
 
 router.beforeEach(async (to, from, next) => {

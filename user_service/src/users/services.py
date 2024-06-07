@@ -1,8 +1,6 @@
 from datetime import timedelta
 import uuid
 
-from sqlalchemy.exc import IntegrityError
-
 from src.exceptions import (
     EntityNotFoundError, InvalidTokenCustomError, UserAlreadyExistsError
 )
