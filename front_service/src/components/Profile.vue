@@ -1,5 +1,4 @@
 <script setup>
-import { patchMeLogoutToLogin } from '@/services/requestHelper';
 import { useAuthStore } from '@/stores/auth.store';
 import { ref } from 'vue';
 
@@ -14,7 +13,7 @@ async function toggleEditMode() {
         try {
             const username = editedUser.value.username;
             const email = editedUser.value.email;
-            await patchMeLogoutToLogin(username, email);
+            await authStore.patchMeAndLogout(username, email);
         } catch(error) {
             console.error('Edit user failed: ', error);
             errorShow.value = error;

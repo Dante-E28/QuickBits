@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import AuthService from '../services/auth.service';
 import userService from "@/services/user.service";
+import router from "@/router/router";
 
 export const useAuthStore = defineStore('auth', () => {
     const userInfo = ref(JSON.parse(localStorage.getItem('userInfo')));
@@ -67,5 +68,17 @@ export const useAuthStore = defineStore('auth', () => {
         return true;
     };
 
-    return { userInfo, login, logout, refresh, checkAuth, setUserData };
+    const patchMeAndLogout = async(username, email) => {
+        await userService.patchMe({
+            'username': username,
+            'email': email
+        });
+        await logout();
+        router.push('/login');
+    }
+
+    return { 
+        userInfo, login, logout, refresh, checkAuth,
+        setUserData, patchMeAndLogout
+    };
 })

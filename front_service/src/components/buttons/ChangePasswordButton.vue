@@ -17,7 +17,7 @@ const changePassword = async () => {
     await userService.patchMe({'password': newPassword.value});
     changeStatus.value = 'Пароль успешно изменен.';
   } catch (error) {
-    changeStatus.value = 'Ошибка при изменении пароля. Попробуйте снова позже.';
+    changeStatus.value = error;
   }
 };
 </script>

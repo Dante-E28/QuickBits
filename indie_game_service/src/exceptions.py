@@ -1,19 +1,32 @@
 from fastapi import HTTPException, status
 
+from src.error_messages import (
+    ENTITY_ALREADY_EXISTS,
+    ENTITY_NOT_FOUND,
+    INVALID_TOKEN,
+    NOT_AUTHENTICATED,
+    NOT_PRIVILEGES
+)
+
 
 class EntityNotFoundError(HTTPException):
     def __init__(self, entity_type: str, entity_id: int):
+        msg = ENTITY_NOT_FOUND.format(
+            entity_type=entity_type,
+            entity_id=entity_id
+        )
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f'{entity_type} id: {entity_id} not found'
+            detail={'msg': msg}
         )
 
 
 class EntityAlreadyExistsError(HTTPException):
     def __init__(self, entity_type: str):
+        msg = ENTITY_ALREADY_EXISTS.format(entity_type=entity_type)
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f'{entity_type} already exists'
+            detail={'msg': msg}
         )
 
 
@@ -21,7 +34,7 @@ class InvalidTokenCustomError(HTTPException):
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={'Invalid token.'}
+            detail={'msg': INVALID_TOKEN}
         )
 
 
@@ -29,8 +42,8 @@ class NotAuthenticatedError(HTTPException):
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"}
+            detail={'msg': NOT_AUTHENTICATED},
+            headers={'WWW-Authenticate': 'Bearer'}
         )
 
 
@@ -38,5 +51,5 @@ class NotPrivilegesError(HTTPException):
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={'Not enough privileges.'}
+            detail={'msg': NOT_PRIVILEGES}
         )
