@@ -1,7 +1,9 @@
 import re
-from pydantic import field_validator
+from pydantic import field_validator, validate_email
+from pydantic_core import PydanticCustomError
 
 from src.error_messages import (
+    INVALID_EMAIL,
     PASSWORD_INVALID_CHARACTER,
     PASSWORD_NO_CAPITAL_LETTER,
     PASSWORD_NO_DIGIT,
@@ -33,3 +35,14 @@ class UsernameValidatorMixin:
         if len(re.findall(r'[A-Za-z]', username)) < 4:
             raise ValidationCustomError(USERNAME_TOO_SHORT)
         return username
+
+
+class EmailValidatorMixin:
+    @field_validator('email')
+    @classmethod
+    def validate_mail(cls, email: str):
+        try:
+            validate_email(email)
+        except PydanticCustomError:
+            raise ValidationCustomError(INVALID_EMAIL)
+        return email

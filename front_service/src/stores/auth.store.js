@@ -77,8 +77,19 @@ export const useAuthStore = defineStore('auth', () => {
         router.push('/login');
     }
 
+    const register = async(username, email, password) => {
+        const responseData = await userService.register({
+            'username': username,
+            'email': email,
+            'password': password
+        });
+        if (responseData) {
+            await login(username, password);
+        }
+    }
+
     return { 
         userInfo, login, logout, refresh, checkAuth,
-        setUserData, patchMeAndLogout
+        setUserData, patchMeAndLogout, register
     };
 })

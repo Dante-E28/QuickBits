@@ -2,9 +2,13 @@ import uuid
 from typing import Annotated
 
 from annotated_types import MaxLen, MinLen
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
-from src.users.mixin import PasswordValidatorMixin, UsernameValidatorMixin
+from src.users.mixin import (
+    EmailValidatorMixin,
+    PasswordValidatorMixin,
+    UsernameValidatorMixin
+)
 
 
 class Token(BaseModel):
@@ -13,9 +17,9 @@ class Token(BaseModel):
     token_type: str = 'Bearer'
 
 
-class UserBase(BaseModel):
+class UserBase(BaseModel, EmailValidatorMixin):
     username: str | None = None
-    email: EmailStr | None = None
+    email: str | None = None
 
 
 class UserCreate(
@@ -34,7 +38,7 @@ class UserUpdate(UserBase, PasswordValidatorMixin):
 class UserRead(UserBase):
     id: uuid.UUID
     username: str
-    email: EmailStr
+    email: str
 
     is_active: bool
     is_verified: bool

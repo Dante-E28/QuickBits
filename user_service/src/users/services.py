@@ -44,7 +44,7 @@ class UserService:
         user_in: UserCreate
     ) -> UserRead:
         async with uow:
-            if cls._is_username_email_exists(
+            if await cls._is_username_email_exists(
                 uow=uow,
                 username=user_in.username,
                 email=user_in.email

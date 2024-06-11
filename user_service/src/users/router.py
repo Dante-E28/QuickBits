@@ -7,8 +7,8 @@ from src.constants import (
 from src.users.services import AuthService, UserService
 from src.users.dependencies import (
     UOWDep,
+    get_current_user,
     get_current_user_for_refresh,
-    get_verified_user,
     validate_auth_user
 )
 from src.users.schemas import Token, UserCreate, UserRead, UserUpdate
@@ -95,7 +95,7 @@ async def register_user(
 
 @user_router.get('/me', response_model=UserRead)
 async def get_me(
-    current_user: UserRead = Depends(get_verified_user)
+    current_user: UserRead = Depends(get_current_user)
 ) -> UserRead:
     return current_user
 
