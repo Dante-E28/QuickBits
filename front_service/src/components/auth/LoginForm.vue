@@ -7,8 +7,15 @@ const authStore = useAuthStore()
 const username = ref(null);
 const password = ref(null);
 
+const changeStatus = ref(null);
+
 async function handleLogin() {
-  await authStore.login(username.value, password.value);
+  try {
+    await authStore.login(username.value, password.value);
+  } catch(error) {
+    changeStatus.value = error;
+  }
+  
 }
 
 </script>
@@ -23,7 +30,9 @@ async function handleLogin() {
         <label for="password" class="form-label">Password</label>
         <input type="password" class="form-control" id="password" v-model="password">
       </div>
-      <button type="submit" class="btn" @click.prevent="handleLogin">Войти</button>
+      <button type="submit" @click.prevent="handleLogin">Войти</button>
+      <router-link class="nav-link reg" to="/registration">регнуть?</router-link>
+      <p v-if="changeStatus" class="status-message">{{ changeStatus }}</p>
     </form>
 </template>
 
@@ -42,5 +51,9 @@ async function handleLogin() {
 
 .p {
   text-align: center;
+}
+
+.reg {
+  font-size: 13px !important;
 }
 </style>

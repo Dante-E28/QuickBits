@@ -54,9 +54,4 @@ const changePassword = async () => {
   display: block;
   margin-bottom: 10px;
 }
-
-.status-message {
-  margin-top: 10px;
-  color: #ff0000; /* или любой другой цвет для сообщения об ошибке */
-}
 </style>

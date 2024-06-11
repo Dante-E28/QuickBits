@@ -13,6 +13,10 @@ class UserService {
     async patchMe(user_data) {
         return await performRequest(() => userClient.patch('/me', user_data));
     }
+
+    async register(user_data) {
+        return await performRequest(() => userClient.post('', user_data));
+    }
 }
 
 export default new UserService();
