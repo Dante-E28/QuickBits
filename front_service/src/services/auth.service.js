@@ -17,6 +17,18 @@ class AuthService {
     async refresh() {
         return await performRequest(() => authClient.post('/refresh'));
     }
+
+    async verifyEmail(token) {
+        return await performRequest(() => authClient.post(`/email_verification/${token}`));
+    }
+
+    async resetPassword(token, password) {
+        return await performRequest(() => authClient.post(`/reset_password/${token}`, password));
+    }
+
+    async sendEmailReset(email) {
+        return await performRequest(() => authClient.post(`/reset_password?email=${email}`));
+    }
 }
 
 

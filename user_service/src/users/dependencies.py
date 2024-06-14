@@ -1,9 +1,14 @@
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Path
 from fastapi.security import OAuth2PasswordRequestForm
 
-from src.constants import ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE
+from src.constants import (
+    ACCESS_TOKEN_TYPE,
+    EMAIL_VERIFICATION_TOKEN_TYPE,
+    PASSWORD_RESET_TOKEN_TYPE,
+    REFRESH_TOKEN_TYPE
+)
 from src.exceptions import (
     InvalidCredentialsError,
     NotPrivilegesError,
@@ -11,7 +16,7 @@ from src.exceptions import (
     UserNotVerifiedError
 )
 from src.users.schemas import UserRead
-from src.users.services import AuthService
+from src.users.services import AuthService, UserService
 from src.users.utils import (
     OAuth2PasswordBearerWithCookie,
     get_payload_from_token
@@ -39,6 +44,12 @@ def get_current_payload_for_refresh(
     return get_payload_from_token(token)
 
 
+def get_current_payload_from_email_token(
+    token: Annotated[str, Path]
+) -> dict:
+    return get_payload_from_token(token)
+
+
 async def get_current_user(
     uow: UOWDep,
     payload: dict = Depends(get_current_payload)
@@ -53,6 +64,22 @@ async def get_current_user_for_refresh(
 ) -> UserRead:
     validate_token_type(payload, REFRESH_TOKEN_TYPE)
     return await AuthService.get_user_by_token_sub(uow, payload)
+
+
+async def verify_current_user(
+    uow: UOWDep,
+    payload: dict = Depends(get_current_payload_from_email_token)
+) -> UserRead:
+    validate_token_type(payload, EMAIL_VERIFICATION_TOKEN_TYPE)
+    return await AuthService.verify_user_email_by_payload(uow, payload)
+
+
+async def get_reset_password_user(
+    uow: UOWDep,
+    payload: dict = Depends(get_current_payload_from_email_token)
+) -> UserRead:
+    validate_token_type(payload, PASSWORD_RESET_TOKEN_TYPE)
+    return await AuthService.get_user_by_token_sub_email(uow, payload)
 
 
 async def get_verified_user(
@@ -92,3 +119,14 @@ async def validate_auth_user(
     if not user:
         raise InvalidCredentialsError
     return user
+
+
+async def validate_user_email(
+    uow: UOWDep,
+    email: str
+) -> UserRead | None:
+    """Gets user by email."""
+    user = await UserService.get_users(uow=uow, email=email)
+    if user:
+        return user[0]
+    return None
