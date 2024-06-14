@@ -32,6 +32,7 @@ async function handleLogin() {
       </div>
       <button type="submit" @click.prevent="handleLogin">Войти</button>
       <router-link class="nav-link reg" to="/registration">регнуть?</router-link>
+      <router-link class="nav-link forget" to="/forgotten">забыл?</router-link>
       <p v-if="changeStatus" class="status-message">{{ changeStatus }}</p>
     </form>
 </template>
@@ -53,7 +54,7 @@ async function handleLogin() {
   text-align: center;
 }
 
-.reg {
+.reg, .forget {
   font-size: 13px !important;
 }
 </style>

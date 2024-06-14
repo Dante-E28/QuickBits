@@ -37,15 +37,24 @@ class AuthSettings(BaseModel):
     refresh_token_expire_days: int = 30
 
 
-class RabbitMQ(BaseSettings):
+class RabbitMQ(EnvBaseSettings):
     RABBITMQ_USER: str
     RABBITMQ_PASS: str
     RABBITMQ_HOST: str
     RABBITMQ_PORT: int
 
 
-class Settings(DBSettings, RabbitMQ):
+class SMTP(EnvBaseSettings):
+    SMTP_PORT: int
+    SMTP_HOST: str
+    SMTP_USER: str
+    SMTP_PASS: str
+
+
+class Settings(DBSettings, RabbitMQ, SMTP):
     DEBUG: bool = True
+    BASE_URL: str = 'http://localhost:8000'
+    FRONT_URL: str = 'http://localhost:5173'
 
     auth_settings: AuthSettings = AuthSettings()
 

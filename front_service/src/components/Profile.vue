@@ -32,6 +32,7 @@ async function toggleEditMode() {
         <span v-if="!isEditing">{{ authStore.userInfo.username }}</span>
         <input v-else v-model="editedUser.username" />
       </div>
+      <span class="blocked" v-if="!authStore.userInfo.is_verified">Email не подтвержден!</span>
       <div class="mb-3">
         <label>Email:</label>
         <span v-if="!isEditing">{{ authStore.userInfo.email }}</span>
@@ -55,5 +56,9 @@ label {
 
 input {
   margin-bottom: 10px;
+}
+
+.blocked {
+    color: brown;
 }
 </style>

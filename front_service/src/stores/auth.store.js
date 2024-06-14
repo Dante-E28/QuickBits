@@ -75,7 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
         });
         await logout();
         router.push('/login');
-    }
+    };
 
     const register = async(username, email, password) => {
         const responseData = await userService.register({
@@ -86,10 +86,40 @@ export const useAuthStore = defineStore('auth', () => {
         if (responseData) {
             await login(username, password);
         }
-    }
+    };
+
+    const verifyEmail = async(token) => {
+        const responseData = await AuthService.verifyEmail(token);
+        if (responseData) {
+            if (userInfo.value) {
+                const userData = userInfo.value;
+                userData.is_verified = true;
+                setUserData(userData);
+            }
+            return responseData;
+        }
+    };
+
+    const resetPassword = async(token, password) => {
+        const responseData = await AuthService.resetPassword(
+            token,
+            {'password': password}
+        );
+        if (responseData) {
+            return responseData;
+        }
+    };
+
+    const sendEmailReset = async(email) => {
+        const responseData = await AuthService.sendEmailReset(email);
+        if (responseData) {
+            return responseData;
+        }
+    };
 
     return { 
         userInfo, login, logout, refresh, checkAuth,
-        setUserData, patchMeAndLogout, register
+        setUserData, patchMeAndLogout, register, verifyEmail,
+        resetPassword, sendEmailReset
     };
 })

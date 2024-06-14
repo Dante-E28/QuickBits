@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Generic, Sequence, Type, TypeVar
 from pydantic import BaseModel
 
-from sqlalchemy import insert, select, update, delete
+from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import Model

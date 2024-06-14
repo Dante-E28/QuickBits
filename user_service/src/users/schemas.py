@@ -50,3 +50,7 @@ class UserRead(UserBase):
 
 class MessageWithUser(BaseModel):
     user_id: str
+
+
+class PasswordReset(BaseModel, PasswordValidatorMixin):
+    password: str

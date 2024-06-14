@@ -1,20 +1,26 @@
 from datetime import timedelta
 import uuid
 
+from src.emails.utils import send_verify_email
 from src.exceptions import (
-    EntityNotFoundError, InvalidTokenCustomError, UserAlreadyExistsError
+    InvalidTokenCustomError, UserAlreadyExistsError, UserNotFoundError
 )
 from src.config import settings
 from src.constants import (
     ACCESS_TOKEN_TYPE,
+    EMAIL_TOKEN_HOURS,
+    EMAIL_VERIFICATION_TOKEN_TYPE,
+    PASSWORD_RESET_TOKEN_TYPE,
     REFRESH_TOKEN_TYPE,
+    RESET_PASSWORD_TOKEN_HOURS,
     TOKEN_TYPE_FIELD
 )
 from src.repositories.unitofwork import IUnitOfWork
-from src.users.schemas import UserRead, UserCreate, UserUpdate
+from src.users.schemas import PasswordReset, UserRead, UserCreate, UserUpdate
 from src.users.utils import (
     encode_jwt,
     get_roles_for_payload,
+    get_sub_from_payload,
     validate_password,
     hash_password
 )
@@ -55,7 +61,12 @@ class UserService:
             data['hashed_password'] = hashed_password
             result = await uow.users.add(data)
             await uow.commit()
-            return UserRead.model_validate(result)
+            user = UserRead.model_validate(result)
+            # Send email verification
+            token: str = AuthService.create_email_verification_token(user)
+            send_verify_email(user.email, token)
+
+            return user
 
     @staticmethod
     async def get_user(
@@ -63,11 +74,10 @@ class UserService:
         user_id: uuid.UUID
     ) -> UserRead:
         async with uow:
-            result = await uow.users.get(id=user_id)
-            if result:
-                return UserRead.model_validate(result)
-            else:
-                raise EntityNotFoundError('User', user_id)
+            user = await uow.users.get(id=user_id)
+            if not user:
+                raise UserNotFoundError(user_id)
+            return UserRead.model_validate(user)
 
     @staticmethod
     async def get_user_by_username(
@@ -75,15 +85,44 @@ class UserService:
         username: str
     ) -> UserRead:
         async with uow:
-            result = await uow.users.get(username=username)
-            return UserRead.model_validate(result)
+            user = await uow.users.get(username=username)
+            if not user:
+                raise UserNotFoundError(username)
+            return UserRead.model_validate(user)
+
+    @staticmethod
+    async def get_user_by_email(
+        uow: IUnitOfWork,
+        email: str
+    ) -> UserRead:
+        async with uow:
+            user = await uow.users.get(email=email)
+            if not user:
+                raise UserNotFoundError(email)
+            return UserRead.model_validate(user)
+
+    @staticmethod
+    async def verify_email(
+        uow: IUnitOfWork,
+        email: str
+    ) -> UserRead:
+        """Verify user email."""
+        async with uow:
+            user = await uow.users.get(email=email)
+            if not user:
+                raise UserNotFoundError(email)
+            if not user.is_verified:
+                user.is_verified = True
+                await uow.commit()
+            return UserRead.model_validate(user)
 
     @staticmethod
     async def get_users(
         uow: IUnitOfWork,
+        **filters
     ) -> list[UserRead]:
         async with uow:
-            users = await uow.users.get_all()
+            users = await uow.users.get_all(**filters)
             return [UserRead.model_validate(user) for user in users]
 
     @classmethod
@@ -126,6 +165,21 @@ class UserService:
     ) -> None:
         async with uow:
             await uow.users.delete(id=user_id)
+            await uow.commit()
+
+    @staticmethod
+    async def reset_password(
+        uow: IUnitOfWork,
+        user_id: uuid.UUID,
+        password_in: PasswordReset
+    ) -> None:
+        """Change password."""
+        async with uow:
+            hashed_password = hash_password(password_in.password)
+            data = {
+                'hashed_password': hashed_password
+            }
+            await uow.users.update(data, id=user_id)
             await uow.commit()
 
 
@@ -193,15 +247,63 @@ class AuthService:
         )
 
     @staticmethod
+    def create_email_verification_token(
+        user: UserRead
+    ) -> str:
+        """Create token for email verification."""
+        payload: dict = {
+            'sub': user.email
+        }
+        return AuthService._create_jwt(
+            token_type=EMAIL_VERIFICATION_TOKEN_TYPE,
+            token_data=payload,
+            expire_timedelta=timedelta(hours=EMAIL_TOKEN_HOURS)
+        )
+
+    @staticmethod
+    def create_password_reset_token(
+        user: UserRead
+    ) -> str:
+        """Create token for password reset."""
+        payload: dict = {
+            'sub': user.email
+        }
+        return AuthService._create_jwt(
+            token_type=PASSWORD_RESET_TOKEN_TYPE,
+            token_data=payload,
+            expire_timedelta=timedelta(hours=RESET_PASSWORD_TOKEN_HOURS)
+        )
+
+    @staticmethod
     async def get_user_by_token_sub(
         uow: IUnitOfWork,
         payload: dict
     ) -> UserRead:
-        """Gets user from token 'sub'."""
-        username: str | None = payload.get('sub')
-        if not username:
-            raise InvalidTokenCustomError
+        """Gets user from token 'sub' username."""
+        username: str = get_sub_from_payload(payload)
         user = await UserService.get_user_by_username(uow, username)
+        if not user:
+            raise InvalidTokenCustomError
+        return UserRead.model_validate(user)
+
+    @staticmethod
+    async def verify_user_email_by_payload(
+        uow: IUnitOfWork,
+        payload: dict
+    ) -> UserRead:
+        """Verify user email by token 'sub' email."""
+        email: str = get_sub_from_payload(payload)
+        user = await UserService.verify_email(uow, email)
+        return user
+
+    @staticmethod
+    async def get_user_by_token_sub_email(
+        uow: IUnitOfWork,
+        payload: dict
+    ) -> UserRead:
+        """Gets user from token 'sub' email."""
+        email: str = get_sub_from_payload(payload)
+        user = await UserService.get_user_by_email(uow, email)
         if not user:
             raise InvalidTokenCustomError
         return UserRead.model_validate(user)

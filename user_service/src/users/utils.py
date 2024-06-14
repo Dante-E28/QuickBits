@@ -147,3 +147,11 @@ def get_roles_for_payload(user: UserRead) -> list[str]:
     if user.is_superuser:
         roles.append('is_superuser')
     return roles
+
+
+def get_sub_from_payload(payload: dict) -> str:
+    """Gets sub from payload or raise."""
+    sub: str | None = payload.get('sub')
+    if not sub:
+        raise InvalidTokenCustomError
+    return sub

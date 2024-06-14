@@ -3,15 +3,24 @@ from fastapi import APIRouter, Depends, Response, status
 
 from src.config import settings
 from src.constants import (
-    ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE, SECONDS_IN_MINUTE)
+    ACCESS_TOKEN_TYPE, EXPIRE, MESSAGE, REFRESH_TOKEN_TYPE, SECONDS_IN_MINUTE)
+from src.emails.utils import send_reset_email, send_verify_email
+from src.messages import (
+    EMAIL_SEND, EMAIL_VERIFIED, LOGGED_IN, LOGGED_OUT, PASSWORD_RESET,
+    TOKEN_REFRESHED
+)
 from src.users.services import AuthService, UserService
 from src.users.dependencies import (
     UOWDep,
     get_current_user,
     get_current_user_for_refresh,
-    validate_auth_user
+    get_reset_password_user,
+    validate_auth_user,
+    validate_user_email,
+    verify_current_user
 )
-from src.users.schemas import Token, UserCreate, UserRead, UserUpdate
+from src.users.schemas import (
+    PasswordReset, Token, UserCreate, UserRead, UserUpdate)
 from src.users.utils import set_cookies
 
 
@@ -45,8 +54,8 @@ async def login(
     )
     response.status_code = status.HTTP_200_OK
     return {
-        'message': 'You are logged in!',
-        'expire': ACCESS_EXPIRE * SECONDS_IN_MINUTE
+        MESSAGE: LOGGED_IN,
+        EXPIRE: ACCESS_EXPIRE * SECONDS_IN_MINUTE
     }
 
 
@@ -56,7 +65,7 @@ async def logout(
 ):
     response.delete_cookie(ACCESS_TOKEN_TYPE)
     response.delete_cookie(REFRESH_TOKEN_TYPE)
-    return {'message': 'You are logged out!'}
+    return {MESSAGE: LOGGED_OUT}
 
 
 @auth_router.post(
@@ -80,9 +89,45 @@ async def refresh(
 ):
     set_cookies(response=response, access_token=token.access_token)
     return {
-        'message': 'Token refreshed!',
-        'expire': ACCESS_EXPIRE * SECONDS_IN_MINUTE
+        MESSAGE: TOKEN_REFRESHED,
+        EXPIRE: ACCESS_EXPIRE * SECONDS_IN_MINUTE
     }
+
+
+@auth_router.post('/email_verification')
+async def send_verification(
+    user: UserRead = Depends(get_current_user)
+):
+    token: str = AuthService.create_email_verification_token(user)
+    send_verify_email(user.email, token)
+    return {MESSAGE: EMAIL_SEND}
+
+
+@auth_router.post('/email_verification/{token}')
+async def verify_me(
+    user: UserRead = Depends(verify_current_user)
+):
+    return {MESSAGE: EMAIL_VERIFIED}
+
+
+@auth_router.post('/reset_password')
+async def send_reset(
+    user: UserRead | None = Depends(validate_user_email)
+):
+    if user:
+        reset_token: str = AuthService.create_password_reset_token(user)
+        send_reset_email(user.email, reset_token)
+    return {MESSAGE: EMAIL_SEND}
+
+
+@auth_router.post('/reset_password/{token}')
+async def reset_password(
+    uow: UOWDep,
+    password_in: PasswordReset,
+    user: UserRead = Depends(get_reset_password_user)
+):
+    await UserService.reset_password(uow, user.id, password_in)
+    return {MESSAGE: PASSWORD_RESET}
 
 
 @user_router.post('', response_model=UserRead)
