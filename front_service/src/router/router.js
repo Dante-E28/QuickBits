@@ -16,7 +16,11 @@ const routes = [
     {path: "/", name: 'HomeView', component: HomeView},
     {path: "/login", name: 'LoginView', component: LoginView},
     {path: "/posts", name: 'Post', component: Post},
-    {path: "/post_detail", name: 'PostDetail', component: PostDetail},
+    {
+        path: "/post_detail/:postId",
+        name: 'PostDetail',
+        component: PostDetail
+    },
     {path: "/test", name: 'Test', component: TestApi},
     {
         path: "/create_post",

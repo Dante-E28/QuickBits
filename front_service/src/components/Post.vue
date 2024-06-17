@@ -1,21 +1,36 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth.store';
 import PostService from '@/services/post.service';
 import UserService from '@/services/user.service';
+import LikeService from '@/services/like.service';
+
+const authStore = useAuthStore()
+
+const currentUser = computed(() => {
+    return authStore.userInfo
+})
 
 const posts = ref([]);
 const users = ref({});
 
 async function getPosts() {
-    const postData = await PostService.getPosts();
-    posts.value = postData.data;
+    posts.value = await PostService.getPosts();
     const userPromises = posts.value.map(post => UserService.getUser(post.user_id));
+    const likePromises = posts.value.map(post => LikeService.getLikes(post.id));
     const userDataArray = await Promise.all(userPromises);
+    const likeDataArray = await Promise.all(likePromises);
 
     userDataArray.forEach((userData, index) => {
         if (userData) {
             users.value[posts.value[index].user_id] = userData.username;
+        }
+    });
+
+    likeDataArray.forEach((likeData, index) => {
+        if (likeData) {
+            posts.value[index].likes = likeData.length;
         }
     });
 }
@@ -26,29 +41,47 @@ onMounted(() => {
 
 const router = useRouter();
 
-function goToPostDetail(postId) {
-    router.push(`/post_detail/${postId}`);
+function goToPostDetail(postId, authorName) {
+    router.push({ name: 'PostDetail', params: { postId }, query: { authorName } });
 }
 
 function goToCreatePost() {
     router.push('/create_post');
 }
+
+async function goToLikePost(postId, userId) {
+    const existingLike = await LikeService.getLike(postId, userId);
+    if (existingLike) {
+        await LikeService.deleteLike(postId, userId);
+        updatePostLikes(postId, false);
+    } else {
+        await LikeService.createLike(postId, userId);
+        updatePostLikes(postId, true);
+    }
+}
+
+function updatePostLikes(postId, liked) {
+    const post = posts.value.find(post => post.id === postId);
+    if (liked) {
+        post.likes += 1;
+    } else {
+        post.likes -= 1;
+    }
+}
 </script>
 
 <template>
   <div>
-    <div v-for="post in posts" :key="post.id" class="post-container" @click="goToPostDetail(post.id)">
+    <div v-for="post in posts" :key="post.id" class="post-container" @click="goToPostDetail(post.id, users[post.user_id])">
       <div class="post-header">
-        <div class="author-info">
           <p class="author-name">{{ users[post.user_id] }}</p>
-        </div>
-        <button class="subscribe-button">Подписаться</button>
       </div>
       <h2 class="post-title">{{ post.name }}</h2>
       <p class="post-description">{{ post.description }}</p>
       <div class="post-actions">
-        <span><i class="fas fa-heart"></i> {{ post.likes }}</span>
-        <span><i class="fas fa-comment"></i> {{ post.comments }}</span>
+        <button class="like-button" @click.stop="goToLikePost(post.id, currentUser.id)">
+          {{ post.likes }} ε(´｡•᎑•`)っ 💕
+        </button>
         <span class="post-date">{{ new Date(post.date_create).toLocaleDateString() }}</span>
       </div>
     </div>
@@ -63,14 +96,10 @@ function goToCreatePost() {
   max-width: 700px;
   margin: 30px auto;
   padding: 20px;
-  color:#ffffff;
+  color: #ffffff;
   background-color: #282c34;
   border-bottom: 3px solid #fc0909;
 }
-
-/* .post-container:hover {
-  transform: scale(1.05);
-} */
 
 .post-header {
   display: flex;
@@ -78,11 +107,8 @@ function goToCreatePost() {
   align-items: center;
 }
 
-.author-info {
-  text-align: left;
-}
-
 .author-name {
+  text-align: left;
   font-size: 12px;
   margin: 0;
 }
@@ -101,13 +127,18 @@ function goToCreatePost() {
 }
 
 .post-title {
-  font-size: 14px;
+  font-size: 16px;
   margin: 10px 0;
 }
 
 .post-description {
-  font-size: 12px;
+  font-size: 14px;
   margin: 10px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 8; /* Показываем только 8 строк */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .post-actions {
@@ -115,14 +146,22 @@ function goToCreatePost() {
   justify-content: space-between;
   align-items: center;
   font-size: 10px;
-}
-
-.post-actions i {
   margin-right: 5px;
 }
 
-.post-end h1 {
-    font-size: 30px;
+.like-button {
+  background-color: white;
+  border: 2px solid #ccc;
+  border-radius: 15px;
+  padding: 3px 6px; /* Уменьшены отступы внутри кнопки */
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.like-button:hover {
+  border-color: #999; /* Изменение цвета границы при наведении */
 }
 
 .floating-button {

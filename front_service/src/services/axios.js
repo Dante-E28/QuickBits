@@ -43,6 +43,26 @@ const authClient = axios.create({
 });
 
 
+const likeClient = axios.create({
+    baseURL: INDIE_URL + '/likes',
+    withCredentials: true,
+    headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+    }
+});
+
+
+const commentClient = axios.create({
+    baseURL: INDIE_URL + '/comments',
+    withCredentials: true,
+    headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+    }
+});
+
+
 const userClient = axios.create({
     baseURL: AUTH_URL + '/user',
     withCredentials: true,
@@ -67,4 +87,4 @@ userClient.interceptors.request.use(async(config) => {
     return Promise.reject(error);
 });
 
-export { postClient, authClient, userClient };
+export { postClient, authClient, userClient, likeClient, commentClient };
