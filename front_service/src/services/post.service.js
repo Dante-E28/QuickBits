@@ -9,6 +9,10 @@ class PostService {
     async createPost(post) {
         return await performRequest(() => postClient.post('', post));
     }
+
+    async getPost(postId) {
+        return await performRequest(() => postClient.get(`/${postId}`));
+    }
 }
 
 export default new PostService();
