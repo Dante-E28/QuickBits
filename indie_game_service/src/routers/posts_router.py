@@ -27,7 +27,11 @@ async def create_post(uow: UOWDep, post_in: PostsSchemaAdd) -> PostsSchema:
     return await PostsService.add_post(uow, post_in)
 
 
-@router.patch('/{post_id}', response_model=PostsSchema)
+@router.patch(
+    '/{post_id}',
+    response_model=PostsSchema,
+    dependencies=[Depends(get_common_permission)]
+)
 async def update_post(
     uow: UOWDep,
     post_update: PostsSchemaUpdate,

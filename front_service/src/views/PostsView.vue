@@ -1,9 +1,9 @@
 <script setup>
-import Post from '@/components/Post.vue';
+import Posts from '@/components/Posts.vue';
 </script>
 
 <template>
-  <Post />
+  <Posts />
 </template>
 
 <style scope>

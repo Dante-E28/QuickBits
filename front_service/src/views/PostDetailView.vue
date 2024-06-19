@@ -1,9 +1,9 @@
 <script setup>
-import PostDetail from '@/components/PostDetail.vue';
+import PostDetail from '@/components/Post.vue';
 </script>
 
 <template>
-  <PostDetail />
+    <PostDetail />
 </template>
 
 <style scope>
