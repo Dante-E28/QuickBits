@@ -1,97 +1,100 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth.store';
 import PostService from '@/services/post.service';
-import UserService from '@/services/user.service';
 import LikeService from '@/services/like.service';
+import Comments from './Comments.vue';
 
-const authStore = useAuthStore()
+const route = useRoute();
+const authStore = useAuthStore();
 
-const currentUser = computed(() => {
-    return authStore.userInfo
-})
+// Состояния
+const post = ref(null);
+const likeCount = ref(0);
+const editPost = ref(null);
+const editName = ref('');
+const editDescription = ref('');
+const authorName = ref(route.query.authorName);
+const currentUser = computed(() => authStore.userInfo);
 
-const posts = ref([]);
-const users = ref({});
-
-async function getPosts() {
-    posts.value = await PostService.getPosts();
-    const userPromises = posts.value.map(post => UserService.getUser(post.user_id));
-    const likePromises = posts.value.map(post => LikeService.getLikes(post.id));
-    const userDataArray = await Promise.all(userPromises);
-    const likeDataArray = await Promise.all(likePromises);
-
-    userDataArray.forEach((userData, index) => {
-        if (userData) {
-            users.value[posts.value[index].user_id] = userData.username;
-        }
-    });
-
-    likeDataArray.forEach((likeData, index) => {
-        if (likeData) {
-            posts.value[index].likes = likeData.length;
-        }
-    });
+async function getPost() {
+    const postId = route.params.postId;
+    post.value = await PostService.getPost(postId);
+    await fetchLikes(postId);
 }
 
-onMounted(() => {
-    getPosts();
-});
-
-const router = useRouter();
-
-function goToPostDetail(postId, authorName) {
-    router.push({ name: 'PostDetail', params: { postId }, query: { authorName } });
-}
-
-function goToCreatePost() {
-    router.push('/create_post');
-}
+async function fetchLikes(postId) {
+    const likes = await LikeService.getLikes(postId);
+    likeCount.value = likes.length;
+};
 
 async function goToLikePost(postId, userId) {
     const existingLike = await LikeService.getLike(postId, userId);
     if (existingLike) {
         await LikeService.deleteLike(postId, userId);
-        updatePostLikes(postId, false);
     } else {
         await LikeService.createLike(postId, userId);
-        updatePostLikes(postId, true);
+    }
+    await fetchLikes(postId);
+}
+
+function startEditPost(post) {
+    editPost.value = post;
+    editName.value = post.name;
+    editDescription.value = post.description;
+}
+
+async function updatePost() {
+    if (editPost.value) {
+        await PostService.updatePost(editPost.value.id, editName.value, editDescription.value);
+        editPost.value = null;
+        await getPost();
     }
 }
 
-function updatePostLikes(postId, liked) {
-    const post = posts.value.find(post => post.id === postId);
-    if (liked) {
-        post.likes += 1;
-    } else {
-        post.likes -= 1;
-    }
+function cancelEditPost() {
+    editPost.value = null;
+    editName.value = '';
+    editDescription.value = '';
 }
+
+onMounted(() => {
+    getPost();
+});
 </script>
 
 <template>
-  <div>
-    <div v-for="post in posts" :key="post.id" class="post-container" @click="goToPostDetail(post.id, users[post.user_id])">
-      <div class="post-header">
-          <p class="author-name">{{ users[post.user_id] }}</p>
-      </div>
-      <h2 class="post-title">{{ post.name }}</h2>
-      <p class="post-description">{{ post.description }}</p>
-      <div class="post-actions">
-        <button class="like-button" @click.stop="goToLikePost(post.id, currentUser.id)">
-          {{ post.likes }} ε(´｡•᎑•`)っ 💕
-        </button>
-        <span class="post-date">{{ new Date(post.date_create).toLocaleDateString() }}</span>
-      </div>
+    <div v-if="post" class="post-container">
+        <div class="post-header">
+            <p class="author-name">{{ authorName }}</p>
+        </div>
+
+        <div v-if="editPost">
+            <input v-model="editName" class="post-title-input" placeholder="Название поста" />
+            <textarea v-model="editDescription" class="post-description-input" placeholder="Описание поста"></textarea>
+            <div class="post-actions">
+                <button @click="updatePost" class="save-button">Сохранить</button>
+                <button @click="cancelEditPost" class="cancel-button">Отменить</button>
+            </div>
+        </div>
+
+        <div v-else>
+            <h2 class="post-title">{{ post.name }}</h2>
+            <p class="post-description">{{ post.description }}</p>
+            <div class="post-actions">
+                <button v-if="post.user_id === currentUser.id" @click="startEditPost(post)" class="edit-button">Редактировать пост</button>
+                <button class="like-button" @click="goToLikePost(post.id, currentUser.id)">
+                    {{ likeCount }} ε(´｡•᎑•`)っ 💕
+                </button>
+                <span class="post-date">{{ new Date(post.date_create).toLocaleDateString() }}</span>
+            </div>
+        </div>
     </div>
-    <button class="floating-button" @click="goToCreatePost">Написать пост</button>
-  </div>
+    <Comments :postId="post.id" />
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
 .post-container {
   max-width: 700px;
   margin: 30px auto;
@@ -113,19 +116,6 @@ function updatePostLikes(postId, liked) {
   margin: 0;
 }
 
-.subscribe-button {
-  background-color: #000;
-  font-size: 10px;
-  padding: 5px 7px !important;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.3s;
-}
-
-.subscribe-button:hover {
-  transform: scale(1.1);
-}
-
 .post-title {
   font-size: 16px;
   margin: 10px 0;
@@ -134,9 +124,6 @@ function updatePostLikes(postId, liked) {
 .post-description {
   font-size: 14px;
   margin: 10px 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 8; /* Показываем только 8 строк */
-  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -164,19 +151,24 @@ function updatePostLikes(postId, liked) {
   border-color: #999; /* Изменение цвета границы при наведении */
 }
 
-.floating-button {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 14px;
-  padding: 10px 20px;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.3s;
+.post-title-input,
+.post-description-input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 8px;
 }
 
-.floating-button:hover {
-  transform: scale(1.1);
+.save-button,
+.cancel-button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+.save-button:hover,
+.cancel-button:hover {
+    background-color: #0056b3;
 }
 </style>

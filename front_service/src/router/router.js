@@ -7,19 +7,19 @@ import ProfileView from '@/views/ProfileView.vue';
 import ForgottenView from '@/views/auth/ForgottenView.vue';
 import EmailVerifyView from '@/views/auth/EmailVerifyView.vue';
 import PasswordResetView from "@/views/auth/PasswordResetView.vue";
-import Post from '@/components/Post.vue';
-import PostDetail from '@/components/PostDetail.vue';
+import PostsView from '@/views/PostsView.vue';
+import PostDetailView from '@/views/PostDetailView.vue';
 import TestApi from '@/views/TestApi.vue';
 
 
 const routes = [
     {path: "/", name: 'HomeView', component: HomeView},
     {path: "/login", name: 'LoginView', component: LoginView},
-    {path: "/posts", name: 'Post', component: Post},
+    {path: "/posts", name: 'PostsView', component: PostsView},
     {
         path: "/post_detail/:postId",
-        name: 'PostDetail',
-        component: PostDetail
+        name: 'PostDetailView',
+        component: PostDetailView
     },
     {path: "/test", name: 'Test', component: TestApi},
     {

@@ -13,6 +13,17 @@ class CommentService {
             }
         }));
     }
+    
+    async deleteComment(commentId) {
+        return await performRequest(() => commentClient.delete(`/${commentId}`));
+    }
+
+    async updateComment(commentId, text, userId) {
+        return await performRequest(() => commentClient.patch(
+            `/${commentId}`, 
+            { text: text, user_id: userId },
+        ));
+    }
 }
 
 export default new CommentService();

@@ -21,5 +21,5 @@ class CommentsSchemaAdd(CommentsSchemaBase):
     post_id: int
 
 
-class CommentsSchemaUpdate(BaseModel):
+class CommentsSchemaUpdate(CommentsSchemaBase):
     text: str | None = None

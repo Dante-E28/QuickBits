@@ -7,6 +7,7 @@ from src.schemas.comments import (
     CommentsSchemaUpdate
 )
 from src.services.comments import CommentsService
+from src.security.dependencies import get_common_permission
 
 
 router = APIRouter()
@@ -33,7 +34,11 @@ async def create_comment(
     return await CommentsService.add_comment(uow, comment_in)
 
 
-@router.patch('/{comment_id}', response_model=CommentsSchema)
+@router.patch(
+    '/{comment_id}',
+    response_model=CommentsSchema,
+    dependencies=[Depends(get_common_permission)]
+)
 async def update_comment(
     uow: UOWDep,
     comment_update: CommentsSchemaUpdate,
@@ -42,7 +47,10 @@ async def update_comment(
     return await CommentsService.edit_comment(uow, comment.id, comment_update)
 
 
-@router.delete('/{comment_id}', status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    '/{comment_id}',
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def delete_comment(
     uow: UOWDep,
     comment: CommentsSchema = Depends(get_comment)

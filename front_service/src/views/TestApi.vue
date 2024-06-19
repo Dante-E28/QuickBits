@@ -38,12 +38,21 @@ async function testGetLike() {
 
 async function submitComment() {
   const comment = {
-    'post_id': 1,
-    'text': content.value,
-    'user_id': authStore.userInfo.id
+    'post_id': 2,
+    'text': '1111выфв11',
+    'user_id': '37a7f82b-6338-4885-af9e-d76ba733aa10'
   };
-  await  CommentService.createComment(comment);
+  await CommentService.createComment(comment);
 }
+
+async function deleteComment() {
+    await CommentService.deleteComment(14)
+}
+
+async function updateComment() {
+    await CommentService.updateComment(25, 'Эшкере!', '3a11e406-802e-4758-9465-8f9314c047c2'
+    )
+} 
 
 </script>
 
@@ -61,8 +70,9 @@ async function submitComment() {
 <p>{{ like }}</p>
 </div>
 <div>
-    <textarea id="content" v-model="content" required/>
     <button type="submit" @click.prevent="submitComment">Запостить</button>
+    <button type="submit" @click.prevent="deleteComment">Удалить</button>
+    <button type="submit" @click.prevent="updateComment">Обновить</button>
 </div>
 </template>
 
