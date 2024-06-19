@@ -1,5 +1,5 @@
 import uuid
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status
 
 from src.deps import UOWDep
 from src.schemas.likes import LikesSchema, LikesSchemaAdd, LikesSchemaDelete

@@ -2,7 +2,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
+from src.limiter import limiter, rate_limit_exceeded_handler
 from src.rabbitmq.server import RabbitServer
 from src.users.router import auth_router, user_router
 
@@ -16,6 +19,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title='Юзер Сервис', lifespan=lifespan)
 
+# Limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+# CORS
 origins = [
     'http://localhost:5173'
 ]
@@ -31,5 +40,6 @@ app.add_middleware(
     ],
 )
 
+# Routers
 app.include_router(auth_router)
 app.include_router(user_router)

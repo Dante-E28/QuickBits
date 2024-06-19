@@ -117,9 +117,16 @@ export const useAuthStore = defineStore('auth', () => {
         }
     };
 
+    const sendEmailVerify = async() => {
+        const responseData = await AuthService.sendEmailVerify();
+        if (responseData) {
+            return responseData;
+        }
+    }
+
     return { 
         userInfo, login, logout, refresh, checkAuth,
         setUserData, patchMeAndLogout, register, verifyEmail,
-        resetPassword, sendEmailReset
+        resetPassword, sendEmailReset, sendEmailVerify
     };
 })
