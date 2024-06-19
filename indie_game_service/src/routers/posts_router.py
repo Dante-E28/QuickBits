@@ -8,7 +8,7 @@ from src.services.posts import PostsService
 router = APIRouter()
 
 
-@router.get('', response_model=list[PostsSchema])
+@router.get('', response_model=list[PostsSchema], dependencies=[Depends(get_common_permission)])
 async def get_all_posts(uow: UOWDep) -> list[PostsSchema]:
     return await PostsService.get_posts(uow)
 

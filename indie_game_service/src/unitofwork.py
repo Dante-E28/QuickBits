@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.database import new_session, engine
+from src.database import new_session
 from src.models import Posts, Comments, Likes
 from src.repositories.posts import PostsRepository
 from src.repositories.comments import CommentsRepository

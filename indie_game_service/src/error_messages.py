@@ -1,3 +1,6 @@
+# Message type.
+ERROR_MESSAGE = 'msg'
+
 # Error messages for authentication and authorization
 INVALID_TOKEN = 'Неверный токен.'
 NOT_AUTHENTICATED = 'Не аутентифицирован.'

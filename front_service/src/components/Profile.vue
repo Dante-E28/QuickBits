@@ -23,22 +23,34 @@ async function toggleEditMode() {
     }
     isEditing.value = !isEditing.value;
 }
+
+async function sendEmailVerification() {
+    try {
+        await authStore.sendEmailVerify();
+        errorShow.value = 'Письмо отправлено на почту.'
+    } catch(error) {
+        console.error('Sending verification error: ', error);
+        errorShow.value = error;
+    }
+}
 </script>
 
 <template>
     <div v-if="authStore.userInfo">
+      <span class="blocked" v-if="errorShow"> {{ errorShow }}</span>
       <div class="mb-3">
         <label>Имя:</label>
         <span v-if="!isEditing">{{ authStore.userInfo.username }}</span>
         <input v-else v-model="editedUser.username" />
       </div>
-      <span class="blocked" v-if="!authStore.userInfo.is_verified">Email не подтвержден!</span>
+      <button class="mb-3" v-if="!authStore.userInfo.is_verified" @click="sendEmailVerification">
+        Подтвердите email
+      </button>
       <div class="mb-3">
         <label>Email:</label>
         <span v-if="!isEditing">{{ authStore.userInfo.email }}</span>
         <input v-else v-model="editedUser.email" />
       </div>
-      <h1 v-if="errorShow"> {{ errorShow }}</h1>
       <button class="mb-3" @click="toggleEditMode">
         {{ isEditing ? 'Сохранить' : 'Редактировать' }}
       </button>
@@ -61,4 +73,6 @@ input {
 .blocked {
     color: brown;
 }
+
+
 </style>

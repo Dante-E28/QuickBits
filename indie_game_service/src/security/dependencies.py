@@ -19,6 +19,10 @@ BASE_DIR = Path(__file__).parent.parent.parent
 public_key_path = BASE_DIR / 'certs' / 'public.pem'
 
 
+def get_public_key() -> str:
+    return public_key_path.read_text()
+
+
 def get_access_token(request: Request) -> str:
     token_data: str | None = request.cookies.get(settings.ACCESS_TOKEN_TYPE)
     schema, token = get_authorization_scheme_param(token_data)
@@ -28,7 +32,7 @@ def get_access_token(request: Request) -> str:
 
 
 def get_payload(token: str = Depends(get_access_token)) -> dict:
-    public_key = public_key_path.read_text()
+    public_key = get_public_key()
     try:
         payload: dict = decode_jwt(token, public_key)
     except InvalidTokenError:

@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { validateEmail } from '@/utils/validators';
+import { validateEmailInput } from '@/utils/validators';
 import { useAuthStore } from '@/stores/auth.store';
 
 const isSend = ref(null);
@@ -9,23 +9,13 @@ const changeStatus = ref(null);
 
 const authStore = useAuthStore();
 
-function validateEmailInput() {
-    if (email.value === '') {
-        changeStatus.value = null;
-    } else if (!validateEmail(email.value)) {
-        changeStatus.value = 'Неправильный формат электронной почты.';
-    } else {
-        changeStatus.value = null;
-    }
+function validateField() {
+    changeStatus.value = validateEmailInput(email.value);
 }
 
 async function handleReset() {
     validateEmailInput();
-    if (changeStatus.value) {
-        changeStatus.value = 'Неправильный формат электронной почты.'
-    } else if (!email.value) {
-        changeStatus.value = 'Поле не заполнено.'
-    } else {
+    if (!changeStatus.value) {
         try {
             await authStore.sendEmailReset(email.value);
             isSend.value = !isSend.value;
@@ -43,7 +33,7 @@ async function handleReset() {
         <form class="form-container">
             <div class="mb-3">
               <label for="email" class="form-label">Почта</label>
-              <input type="text" class="form-control" id="email" v-model="email" @blur="validateEmailInput">
+              <input type="text" class="form-control" id="email" v-model="email" @blur="validateField">
             </div>
             <button type="submit" @click.prevent="handleReset">Сбросить</button>
             <p v-if="changeStatus" class="status-message">{{ changeStatus }}</p>

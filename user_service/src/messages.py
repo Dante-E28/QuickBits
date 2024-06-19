@@ -1,5 +1,5 @@
 # Email verification and password reset consts.
-EMAIL_VERIFICATION_SUBJECT = 'Подтверждение пароля'
+EMAIL_VERIFICATION_SUBJECT = 'Подтверждение почты'
 EMAIL_RESET_PASSWORD_SUBJECT = 'Сброс пароля'
 
 

@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, Path
+from fastapi import Depends, Path, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
 from src.constants import (
@@ -9,6 +9,7 @@ from src.constants import (
     PASSWORD_RESET_TOKEN_TYPE,
     REFRESH_TOKEN_TYPE
 )
+from src.limiter import limiter
 from src.exceptions import (
     InvalidCredentialsError,
     NotPrivilegesError,
@@ -106,9 +107,11 @@ async def get_superuser(
     return current_user
 
 
+@limiter.limit('5 per 30 minute')
 async def validate_auth_user(
     uow: UOWDep,
-    credentials: Annotated[OAuth2PasswordRequestForm, Depends()]
+    credentials: Annotated[OAuth2PasswordRequestForm, Depends()],
+    request: Request  # for limiter
 ) -> UserRead:
     """Gets user by credentials."""
     user = await AuthService.authenticate_user(

@@ -2,6 +2,7 @@
 import { useAuthStore } from '@/stores/auth.store';
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { validatePasswordInput } from '@/utils/validators';
 
 const authStore = useAuthStore();
 const route = useRoute();
@@ -11,14 +12,21 @@ const response = ref(null);
 const password = ref(null);
 const confirmPassword = ref(null);
 
+function validateField() {
+    errorShow.value = validatePasswordInput(password.value);
+}
+
 async function handleReset() {
-    if (password.value !== confirmPassword.value) {
-        errorShow.value = 'Пароли не совпадают!';
-    } else {
-        try {
-            response.value = await authStore.resetPassword(route.params.token, password.value);
-        } catch(error) {
-            errorShow.value = error;
+    validateField();
+    if (!errorShow.value) {
+        if (password.value !== confirmPassword.value) {
+            errorShow.value = 'Пароли не совпадают!';
+        } else {
+            try {
+                response.value = await authStore.resetPassword(route.params.token, password.value);
+            } catch(error) {
+                errorShow.value = error;
+            }
         }
     }
 }
