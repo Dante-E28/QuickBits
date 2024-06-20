@@ -133,7 +133,7 @@ class UserService:
         user_id: uuid.UUID
     ) -> UserRead:
         async with uow:
-            if cls._is_username_email_exists(
+            if await cls._is_username_email_exists(
                 uow=uow,
                 username=user_update.username,
                 email=user_update.email

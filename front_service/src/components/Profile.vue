@@ -12,8 +12,7 @@ async function toggleEditMode() {
     if (isEditing.value) {
         try {
             const username = editedUser.value.username;
-            const email = editedUser.value.email;
-            await authStore.patchMeAndLogout(username, email);
+            await authStore.patchMeAndLogout(username);
         } catch(error) {
             console.error('Edit user failed: ', error);
             errorShow.value = error;
@@ -48,8 +47,7 @@ async function sendEmailVerification() {
       </button>
       <div class="mb-3">
         <label>Email:</label>
-        <span v-if="!isEditing">{{ authStore.userInfo.email }}</span>
-        <input v-else v-model="editedUser.email" />
+        <span >{{ authStore.userInfo.email }}</span>
       </div>
       <button class="mb-3" @click="toggleEditMode">
         {{ isEditing ? 'Сохранить' : 'Редактировать' }}
