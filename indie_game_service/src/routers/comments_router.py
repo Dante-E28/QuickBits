@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status
+from fastapi_cache.decorator import cache
 
-from src.deps import UOWDep
+from src.deps import UOWDep, no_cache_get_comment
 from src.schemas.comments import (
     CommentsSchema,
     CommentsSchemaAdd,
@@ -14,6 +15,7 @@ router = APIRouter()
 
 
 @router.get('', response_model=list[CommentsSchema])
+@cache(expire=15)
 async def get_all_comments_for_post(
     uow: UOWDep,
     post_id: int
@@ -22,6 +24,7 @@ async def get_all_comments_for_post(
 
 
 @router.get('/{comment_id}', response_model=CommentsSchema)
+@cache(expire=15)
 async def get_comment(uow: UOWDep, comment_id: int) -> CommentsSchema:
     return await CommentsService.get_comment(uow, comment_id)
 
@@ -42,7 +45,7 @@ async def create_comment(
 async def update_comment(
     uow: UOWDep,
     comment_update: CommentsSchemaUpdate,
-    comment: CommentsSchema = Depends(get_comment)
+    comment: CommentsSchema = Depends(no_cache_get_comment)
 ) -> CommentsSchema:
     return await CommentsService.edit_comment(uow, comment.id, comment_update)
 
@@ -53,6 +56,6 @@ async def update_comment(
 )
 async def delete_comment(
     uow: UOWDep,
-    comment: CommentsSchema = Depends(get_comment)
+    comment: CommentsSchema = Depends(no_cache_get_comment)
 ) -> None:
     return await CommentsService.delete_comment(uow, comment.id)

@@ -36,7 +36,7 @@ class AuthSettings(BaseSettings):
 
 
 class Settings(AuthSettings, DBSettings, RabbitMQ):
-    DEBUG: bool = True
+    DEBUG: bool = False
 
 
 settings = Settings()

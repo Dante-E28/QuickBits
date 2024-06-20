@@ -1,5 +1,6 @@
 import uuid
 from fastapi import APIRouter, status
+from fastapi_cache.decorator import cache
 
 from src.deps import UOWDep
 from src.schemas.likes import LikesSchema, LikesSchemaAdd, LikesSchemaDelete
@@ -10,6 +11,7 @@ router = APIRouter()
 
 
 @router.get('', response_model=list[LikesSchema])
+@cache(expire=15)
 async def get_all_likes(uow: UOWDep, post_id: int) -> list[LikesSchema]:
     return await LikesService.get_likes(uow, post_id)
 

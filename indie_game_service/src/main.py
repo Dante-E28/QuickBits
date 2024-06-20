@@ -1,6 +1,9 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from redis import asyncio as aioredis
 
 from src.rabbitmq.client import rabbit_connection, rabbit_client
 from src.routers.comments_router import router as comments_router
@@ -13,6 +16,8 @@ async def lifespan(app: FastAPI):
     await rabbit_connection.connect()
     rabbit_client.channel = rabbit_connection.channel
     app.state.rabbit_client = rabbit_client
+    redis = aioredis.from_url('redis://localhost:6379')
+    FastAPICache.init(RedisBackend(redis), prefix='fastapi-cache')
     yield
     await rabbit_connection.close()
 

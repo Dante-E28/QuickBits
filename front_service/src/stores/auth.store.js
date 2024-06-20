@@ -68,10 +68,9 @@ export const useAuthStore = defineStore('auth', () => {
         return true;
     };
 
-    const patchMeAndLogout = async(username, email) => {
+    const patchMeAndLogout = async(username) => {
         await userService.patchMe({
-            'username': username,
-            'email': email
+            'username': username
         });
         await logout();
         router.push('/login');

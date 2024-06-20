@@ -1,4 +1,5 @@
 from typing import Annotated
+import uuid
 
 from fastapi import Depends, Path, Request
 from fastapi.security import OAuth2PasswordRequestForm
@@ -133,3 +134,7 @@ async def validate_user_email(
     if user:
         return user[0]
     return None
+
+
+async def no_cache_get_user(uow: UOWDep, user_id: uuid.UUID):
+    return await UserService.get_user(uow, user_id)
