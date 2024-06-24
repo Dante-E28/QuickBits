@@ -18,21 +18,28 @@ const currentPage = ref(parseInt(route.query.page) || 1);
 const postsPerPage = 5;
 
 async function getPosts() {
-    posts.value = await PostService.getPosts();
-    const userPromises = posts.value.map(post => UserService.getUser(post.user_id));
-    const likePromises = posts.value.map(post => LikeService.getLikes(post.id));
+    const postsData = await PostService.getPosts();
+    posts.value = postsData;
+
+    const postIds = posts.value.map(post => post.id);
+    const likeData = await LikeService.getLikes(postIds);
+
+    likeData.forEach((likes, index) => {
+        if (likes) {
+            posts.value[index].likes = likes.length;
+        } else {
+            posts.value[index].likes = 0;
+        }
+    });
+
+    const userPromises = posts.value.map(post => UserService.getUser(post.user_id).catch(() => null));
     const userDataArray = await Promise.all(userPromises);
-    const likeDataArray = await Promise.all(likePromises);
 
     userDataArray.forEach((userData, index) => {
         if (userData) {
             users.value[posts.value[index].user_id] = userData.username;
-        }
-    });
-
-    likeDataArray.forEach((likeData, index) => {
-        if (likeData) {
-            posts.value[index].likes = likeData.length;
+        } else {
+            users.value[posts.value[index].user_id] = 'Олежка';
         }
     });
 }
@@ -71,22 +78,28 @@ function goToCreatePost() {
 }
 
 async function goToLikePost(postId, userId) {
-    const existingLike = await LikeService.getLike(postId, userId);
-    if (existingLike) {
-        await LikeService.deleteLike(postId, userId);
-        updatePostLikes(postId, false);
-    } else {
-        await LikeService.createLike(postId, userId);
-        updatePostLikes(postId, true);
+    try {
+        const existingLike = await LikeService.getLike(postId, userId);
+        if (existingLike) {
+            await LikeService.deleteLike(postId, userId);
+            updatePostLikes(postId, false);
+        } else {
+            await LikeService.createLike(postId, userId);
+            updatePostLikes(postId, true);
+        }
+    } catch (error) {
+        console.error('Error liking post:', error);
     }
 }
 
 function updatePostLikes(postId, liked) {
     const post = posts.value.find(post => post.id === postId);
-    if (liked) {
-        post.likes += 1;
-    } else {
-        post.likes -= 1;
+    if (post) {
+        if (liked) {
+            post.likes += 1;
+        } else {
+            post.likes -= 1;
+        }
     }
 }
 </script>

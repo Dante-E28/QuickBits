@@ -22,7 +22,12 @@ const currentUser = computed(() => authStore.userInfo);
 async function getComments() {
     const fetchedComments = await CommentService.getComments(props.postId);
     comments.value = await Promise.all(fetchedComments.map(async comment => {
-        const user = await UserService.getUser(comment.user_id);
+        let user;
+        try {
+            user = await UserService.getUser(comment.user_id);
+        } catch (error) {
+            user = { username: 'Вакамото Синго' };
+        }
         return {
             ...comment,
             user,
@@ -40,6 +45,7 @@ async function submitComment() {
     const createdComment = await CommentService.createComment(comment);
     comments.value.push({
         ...createdComment,
+        user: { username: currentUser.value.username },
         expanded: false
     });
     newComment.value = '';
@@ -49,14 +55,18 @@ function toggleExpandComment(comment) {
     comment.expanded = !comment.expanded;
 }
 
-async function deleteComment(commentId) {
-    await CommentService.deleteComment(commentId);
-    comments.value = comments.value.filter(comment => comment.id !== commentId);
+async function deleteComment(commentId, commentUserId) {
+    if (currentUser.value.is_superuser || commentUserId === currentUser.value.id) {
+        await CommentService.deleteComment(commentId);
+        comments.value = comments.value.filter(comment => comment.id !== commentId);
+    }
 }
 
 function startUpdateComment(comment) {
-    editComment.value = comment;
-    editText.value = comment.text;
+    if (currentUser.value.is_superuser || comment.user_id === currentUser.value.id) {
+        editComment.value = comment;
+        editText.value = comment.text;
+    }
 }
 
 async function updateComment(userId) {
@@ -84,7 +94,7 @@ onMounted(() => {
 
     <div v-for="comment in comments" :key="comment.id" class="comments-container">
         <div class="comment-header">
-            <p class="author-name">{{ comment.user.username }}</p>
+            <p class="author-name">{{ comment.user.username }} </p>
         </div>
         <div v-if="editComment && editComment.id === comment.id">
             <textarea v-model="editText" class="comment-input"></textarea>
@@ -98,8 +108,8 @@ onMounted(() => {
                 {{ comment.expanded ? 'Скрыть' : 'Читать далее...' }}
             </button>
         </div>
-        <button v-if="comment.user_id === currentUser.id" @click="deleteComment(comment.id)">Удалить</button>
-        <button v-if="comment.user_id === currentUser.id" @click="startUpdateComment(comment)">Редактировать</button>
+        <button v-if="currentUser.is_superuser || comment.user_id === currentUser.id" @click="deleteComment(comment.id, comment.user_id)">Удалить</button>
+        <button v-if="currentUser.is_superuser || comment.user_id === currentUser.id" @click="startUpdateComment(comment)">Редактировать</button>
     </div>
 </template>
 

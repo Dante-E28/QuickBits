@@ -9,6 +9,7 @@ import CommentService from '@/services/comment.service';
 const user = ref(null);
 const posts = ref(null);
 const like = ref(null);
+const likes = ref(null);
 
 const authStore = useAuthStore();
 
@@ -54,6 +55,10 @@ async function updateComment() {
     )
 } 
 
+async function testGetLikes() {
+    const response = await LikeService.getLikes([10, 11]);
+    likes.value = response.data;
+}
 </script>
 
 <template>
@@ -64,10 +69,11 @@ async function updateComment() {
 <button type="submit" @click="testCreateLike">Добавить</button>
 <button type="submit" @click="testDeleteLike">Удалить</button>
 <button type="submit" @click="testGetLike">Получить</button>
+<button type="submit" @click="testGetLikes">Получить лайки постов 10 и 11</button>
 
 <p>{{ user }}</p>
 <p>{{ posts }}</p>
-<p>{{ like }}</p>
+<p>{{ likes }}</p>
 </div>
 <div>
     <button type="submit" @click.prevent="submitComment">Запостить</button>
