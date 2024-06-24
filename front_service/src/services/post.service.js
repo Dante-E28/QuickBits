@@ -20,6 +20,10 @@ class PostService {
             { name: name, description: description },
         ));
     }
+
+    async deletePost(postId) {
+        return await performRequest(() => postClient.delete(`/${postId}`))
+    }
 }
 
 export default new PostService();
