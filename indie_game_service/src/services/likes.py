@@ -35,7 +35,7 @@ class LikesService:
         async with uow:
             likes = await uow.likes.get_all(post_id=post_id)
             return [LikesSchema.model_validate(like) for like in likes]
-        
+
     # Test
     @staticmethod
     async def get_likes_for_posts(uow: IUnitOfWork, post_ids: list[int]) -> dict[int, list[LikesSchema]]:
@@ -45,7 +45,7 @@ class LikesService:
                 likes = await uow.likes.get_all(post_id=post_id)
                 likes_dict[post_id] = [LikesSchema.model_validate(like) for like in likes]
             return likes_dict
-    
+
     @staticmethod
     async def get_likes_by_post_ids(
         uow: IUnitOfWork,
