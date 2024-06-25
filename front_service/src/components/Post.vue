@@ -21,13 +21,13 @@ const currentUser = computed(() => authStore.userInfo);
 async function getPost() {
     const postId = route.params.postId;
     post.value = await PostService.getPost(postId);
-    await fetchLikes(postId);
+    await fetchLikes([postId]);
 }
 
-async function fetchLikes(postId) {
-    const likes = await LikeService.getLikes(postId);
-    likeCount.value = likes.length;
-};
+async function fetchLikes(postIds) {
+    const likes = await LikeService.getLikes(postIds);
+    likeCount.value = likes.reduce((acc, likesForPost) => acc + likesForPost.length, 0);
+}
 
 async function goToLikePost(postId, userId) {
     const existingLike = await LikeService.getLike(postId, userId);
@@ -36,13 +36,15 @@ async function goToLikePost(postId, userId) {
     } else {
         await LikeService.createLike(postId, userId);
     }
-    await fetchLikes(postId);
+    await fetchLikes([postId]);
 }
 
 function startEditPost(post) {
-    editPost.value = post;
-    editName.value = post.name;
-    editDescription.value = post.description;
+    if (currentUser.value.is_superuser || post.user_id === currentUser.value.id) {
+        editPost.value = post;
+        editName.value = post.name;
+        editDescription.value = post.description;
+    }
 }
 
 async function updatePost() {
@@ -50,6 +52,12 @@ async function updatePost() {
         await PostService.updatePost(editPost.value.id, editName.value, editDescription.value);
         editPost.value = null;
         await getPost();
+    }
+}
+
+async function deletePost(postId) {
+    if (currentUser.value.is_superuser || post.value.user_id === currentUser.value.id) {
+        await PostService.deletePost(postId);
     }
 }
 
@@ -83,7 +91,8 @@ onMounted(() => {
             <h2 class="post-title">{{ post.name }}</h2>
             <p class="post-description">{{ post.description }}</p>
             <div class="post-actions">
-                <button v-if="post.user_id === currentUser.id" @click="startEditPost(post)" class="edit-button">Редактировать пост</button>
+                <button v-if="currentUser.is_superuser || post.user_id === currentUser.id" @click="startEditPost(post)" class="edit-button">Редактировать пост</button>
+                <button v-if="currentUser.is_superuser || post.user_id === currentUser.id" @click="deletePost(post.id)" class="delete-button">Удалить пост</button>
                 <button class="like-button" @click="goToLikePost(post.id, currentUser.id)">
                     {{ likeCount }} ε(´｡•᎑•`)っ 💕
                 </button>
@@ -91,6 +100,7 @@ onMounted(() => {
             </div>
         </div>
     </div>
+    
     <Comments :postId="post.id" />
 </template>
 
@@ -161,7 +171,7 @@ onMounted(() => {
 .save-button,
 .cancel-button {
     background-color: #007BFF;
-    color: white;
+    color: rgb(0, 0, 0);
     border: none;
     padding: 8px 16px;
     cursor: pointer;

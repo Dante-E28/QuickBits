@@ -15,12 +15,11 @@ class LikeService {
         }))
     }
 
-    async getLikes(postId) {
-        const response = await performRequest(() => likeClient.get(``, {
-            params: {
-                post_id: postId
-            }
-        }));
+    async getLikes(postIds) {
+        const params = new URLSearchParams();
+        postIds.forEach(id => params.append('post_ids', id));
+        
+        const response = await performRequest(() => likeClient.get('/likes', { params }));
         return response;
     }
 
