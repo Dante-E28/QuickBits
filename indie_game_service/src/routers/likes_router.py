@@ -3,6 +3,7 @@ from fastapi import APIRouter, Query, status
 from fastapi_cache.decorator import cache
 
 from src.deps import UOWDep
+from src.redis_cache import clear_cache
 from src.schemas.likes import LikesSchema, LikesSchemaAdd, LikesSchemaDelete
 from src.services.likes import LikesService
 
@@ -10,13 +11,7 @@ from src.services.likes import LikesService
 router = APIRouter()
 
 
-#@router.get('', response_model=list[LikesSchema])
-#@cache(expire=15)
-#async def get_all_likes(uow: UOWDep, post_id: int) -> list[LikesSchema]:
-    #return await LikesService.get_likes(uow, post_id)
-
 @router.get('/likes', response_model=list[list[LikesSchema]])
-@cache(expire=15)
 async def get_all_likes(
     uow: UOWDep,
     post_ids: list[int] = Query(..., description="IDs of the posts")
@@ -33,6 +28,11 @@ async def get_like(
 
 @router.post('', response_model=LikesSchema)
 async def create_like(uow: UOWDep, like_in: LikesSchemaAdd) -> LikesSchema:
+    await clear_cache(
+        get_all_likes,
+        'likes',
+        kwargs={'post_id': like_in.post_id}
+    )
     return await LikesService.add_like(uow, like_in)
 
 
@@ -41,4 +41,5 @@ async def delete_like(
     uow: UOWDep,
     like: LikesSchemaDelete
 ) -> None:
+    await clear_cache(get_all_likes, 'likes', kwargs={'post_id': like.post_id})
     return await LikesService.delete_like(uow, like)

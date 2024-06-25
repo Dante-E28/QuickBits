@@ -6,6 +6,7 @@ from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
 
 from src.rabbitmq.client import rabbit_connection, rabbit_client
+from src.redis_cache import RouterCacheControlResetMiddleware, no_uow_key_builder
 from src.routers.comments_router import router as comments_router
 from src.routers.likes_router import router as likes_router
 from src.routers.posts_router import router as posts_router
@@ -17,7 +18,11 @@ async def lifespan(app: FastAPI):
     rabbit_client.channel = rabbit_connection.channel
     app.state.rabbit_client = rabbit_client
     redis = aioredis.from_url('redis://localhost:6379')
-    FastAPICache.init(RedisBackend(redis), prefix='fastapi-cache')
+    FastAPICache.init(
+        RedisBackend(redis),
+        prefix='indie',
+        key_builder=no_uow_key_builder
+    )
     yield
     await rabbit_connection.close()
 
@@ -37,6 +42,7 @@ app.add_middleware(
         'Access-Control-Allow-Headers', 'Access-Control-Allow-Origin'
     ],
 )
+app.add_middleware(RouterCacheControlResetMiddleware)
 
 
 app.include_router(comments_router, prefix='/comments', tags=['Comments'])
