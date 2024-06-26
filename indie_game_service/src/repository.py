@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Generic, Sequence, Type, TypeVar
 from pydantic import BaseModel
 
-from sqlalchemy import insert, select, update
+from sqlalchemy import insert, select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import Model
@@ -72,5 +72,13 @@ class SQLAlchemyRepository(AbstractRepository, Generic[ModelType]):
         """Update an existing entity."""
         stmt = update(self.model).values(**data).filter_by(
             **filters).returning(self.model)
+        res = await self.session.execute(stmt)
+        return res.scalar_one()
+
+    async def count(self, **filters) -> int:
+        """Работает и не трогай"""
+        stmt = select(func.count()).select_from(self.model)
+        if filters:
+            stmt = stmt.filter_by(**filters)
         res = await self.session.execute(stmt)
         return res.scalar_one()

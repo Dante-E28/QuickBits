@@ -1,6 +1,7 @@
 import uuid
-from fastapi import Query
+
 from sqlalchemy.exc import IntegrityError
+
 from src.exceptions import EntityNotFoundError, EntityAlreadyExistsError
 from src.schemas.likes import LikesSchema, LikesSchemaAdd, LikesSchemaDelete
 from src.unitofwork import IUnitOfWork
@@ -28,34 +29,15 @@ class LikesService:
                 raise EntityAlreadyExistsError('Like')
 
     @staticmethod
-    async def get_likes(
-        uow: IUnitOfWork,
-        post_id: int
-    ) -> list[LikesSchema]:
-        async with uow:
-            likes = await uow.likes.get_all(post_id=post_id)
-            return [LikesSchema.model_validate(like) for like in likes]
-
-    # Test
-    @staticmethod
-    async def get_likes_for_posts(uow: IUnitOfWork, post_ids: list[int]) -> dict[int, list[LikesSchema]]:
-        async with uow:
-            likes_dict = {}
-            for post_id in post_ids:
-                likes = await uow.likes.get_all(post_id=post_id)
-                likes_dict[post_id] = [LikesSchema.model_validate(like) for like in likes]
-            return likes_dict
-
-    @staticmethod
     async def get_likes_by_post_ids(
         uow: IUnitOfWork,
-        post_ids: list[int] = Query(..., description="IDs of the posts")
-    ) -> list[list[LikesSchema]]:
+        post_ids: list[int]
+    ) -> list[int]:
         async with uow:
             results = []
             for post_id in post_ids:
-                likes = await uow.likes.get_all(post_id=post_id)
-                results.append([LikesSchema.model_validate(like) for like in likes])
+                likes_count = await uow.likes.count(post_id=post_id)
+                results.append(likes_count)
             return results
 
     @staticmethod

@@ -9,11 +9,11 @@ from src.services.likes import LikesService
 router = APIRouter()
 
 
-@router.get('/likes', response_model=list[list[LikesSchema]])
+@router.get('/likes', response_model=list[int])
 async def get_all_likes(
     uow: UOWDep,
-    post_ids: list[int] = Query(..., description="IDs of the posts")
-) -> list[list[LikesSchema]]:
+    post_ids: list[int] = Query(default=None)
+) -> list[int]:
     return await LikesService.get_likes_by_post_ids(uow, post_ids)
 
 
