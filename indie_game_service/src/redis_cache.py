@@ -20,13 +20,13 @@ def no_uow_key_builder(
 
     prefix = f"{FastAPICache.get_prefix()}:{namespace}:"
     if kwargs:
-        no_uow_kwargs = kwargs.copy()
+        no_uow_kw = kwargs.copy()
         if kwargs.get('uow'):
-            no_uow_kwargs.pop('uow')
+            no_uow_kw.pop('uow')
     cache_key = (
         prefix
         + hashlib.md5(  # nosec:B303
-            f"{func.__module__}:{func.__name__}:{args}:{no_uow_kwargs}".encode()
+            f"{func.__module__}:{func.__name__}:{args}:{no_uow_kw}".encode()
         ).hexdigest()
     )
     return cache_key
@@ -45,8 +45,7 @@ async def clear_cache(func, namespace: str, kwargs: dict | None = None):
 
 
 disable_cache_routes = [
-    '/comments',
-    '/likes'
+    '/comments'
 ]
 
 
