@@ -15,12 +15,20 @@ class LikeService {
         }))
     }
 
-    async getLikes(postIds) {
+    async getLikesCount(postIds) {
         const params = new URLSearchParams();
         postIds.forEach(id => params.append('post_ids', id));
-        
-        const response = await performRequest(() => likeClient.get('/likes', { params }));
-        return response;
+
+        console.log('Sending request with params:', params.toString());
+
+        try {
+            const response = await performRequest(() => likeClient.get('/likes', { params }));
+            console.log('Received response:', response);
+            return response;
+        } catch (error) {
+            console.error('Error while fetching likes:', error);
+            throw error;
+        }
     }
 
     async getLike(postId, userId) {

@@ -25,8 +25,10 @@ async function getPost() {
 }
 
 async function fetchLikes(postIds) {
-    const likes = await LikeService.getLikes(postIds);
-    likeCount.value = likes.reduce((acc, likesForPost) => acc + likesForPost.length, 0);
+    const likes = await LikeService.getLikesCount(postIds);
+    if (likes && likes.length) {
+        likeCount.value = likes[0];
+    }
 }
 
 async function goToLikePost(postId, userId) {
@@ -58,6 +60,7 @@ async function updatePost() {
 async function deletePost(postId) {
     if (currentUser.value.is_superuser || post.value.user_id === currentUser.value.id) {
         await PostService.deletePost(postId);
+        post.value = null;
     }
 }
 

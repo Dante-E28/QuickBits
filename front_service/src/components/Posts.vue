@@ -22,14 +22,10 @@ async function getPosts() {
     posts.value = postsData;
 
     const postIds = posts.value.map(post => post.id);
-    const likeData = await LikeService.getLikes(postIds);
+    const likesCountData = await LikeService.getLikesCount(postIds);
 
-    likeData.forEach((likes, index) => {
-        if (likes) {
-            posts.value[index].likes = likes.length;
-        } else {
-            posts.value[index].likes = 0;
-        }
+    likesCountData.forEach((likeCount, index) => {
+        posts.value[index].likes = likeCount;
     });
 
     const userPromises = posts.value.map(post => UserService.getUser(post.user_id).catch(() => null));
@@ -106,12 +102,12 @@ function updatePostLikes(postId, liked) {
 
 <template>
   <div>
-    <div v-for="post in paginatedPosts" :key="post.id" class="post-container" @click="goToPostDetail(post.id, users[post.user_id])">
-      <div class="post-header">
-          <p class="author-name">{{ users[post.user_id] }}</p>
+    <div v-for="post in paginatedPosts" :key="post.id" class="post-container">
+      <div class="post-header" @click="goToPostDetail(post.id, users[post.user_id])">
+        <p class="author-name">{{ users[post.user_id] }}</p>
       </div>
-      <h2 class="post-title">{{ post.name }}</h2>
-      <p class="post-description">{{ post.description }}</p>
+      <h2 class="post-title" @click="goToPostDetail(post.id, users[post.user_id])">{{ post.name }}</h2>
+      <p class="post-description" @click="goToPostDetail(post.id, users[post.user_id])">{{ post.description }}</p>
       <div class="post-actions">
         <button class="like-button" @click.stop="goToLikePost(post.id, currentUser.id)">
           {{ post.likes }} ε(´｡•᎑•`)っ 💕

@@ -56,7 +56,7 @@ async function updateComment() {
 } 
 
 async function testGetLikes() {
-    const response = await LikeService.getLikes([10, 11]);
+    const response = await LikeService.getLikesCount([10, 11]);
     likes.value = response.data;
 }
 </script>
