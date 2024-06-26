@@ -17,7 +17,7 @@ from src.users.router import auth_router, user_router
 async def lifespan(app: FastAPI):
     rabbit_server = await RabbitServer.create_server()
     redis = aioredis.from_url('redis://localhost:6379')
-    FastAPICache.init(RedisBackend(redis), prefix='fastapi-cache')
+    FastAPICache.init(RedisBackend(redis), prefix='user_service')
     yield
     await rabbit_server.close_connection()
 

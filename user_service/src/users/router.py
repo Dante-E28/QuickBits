@@ -155,7 +155,6 @@ async def get_all_users(uow: UOWDep) -> list[UserRead]:
 
 
 @user_router.get('/{user_id}', response_model=UserRead)
-@cache(expire=120)
 async def get_user(uow: UOWDep, user_id: uuid.UUID):
     return await UserService.get_user(uow, user_id)
 

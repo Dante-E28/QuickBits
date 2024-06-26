@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 from fastapi_cache.decorator import cache
 
 from src.deps import UOWDep, no_cache_get_post
+from src.redis_cache import clear_cache
 from src.schemas.posts import PostsSchema, PostsSchemaAdd, PostsSchemaUpdate
 from src.security.dependencies import get_common_permission
 from src.services.posts import PostsService
@@ -10,13 +11,13 @@ router = APIRouter()
 
 
 @router.get('', response_model=list[PostsSchema])
-@cache(expire=60)
+@cache(expire=60, namespace='all_posts')
 async def get_all_posts(uow: UOWDep) -> list[PostsSchema]:
     return await PostsService.get_posts(uow)
 
 
 @router.get('/{post_id}', response_model=PostsSchema)
-@cache(expire=60)
+@cache(expire=60, namespace='post')
 async def get_post(uow: UOWDep, post_id: int) -> PostsSchema:
     return await PostsService.get_post(uow, post_id)
 
@@ -40,6 +41,11 @@ async def update_post(
     post_update: PostsSchemaUpdate,
     post: PostsSchema = Depends(no_cache_get_post)
 ) -> PostsSchema:
+    await clear_cache(
+        get_post,
+        'post',
+        kwargs={'post_id': post.id}
+    )
     return await PostsService.edit_post(uow, post_update, post.id)
 
 
@@ -48,4 +54,9 @@ async def delete_post(
     uow: UOWDep,
     post: PostsSchema = Depends(no_cache_get_post)
 ) -> None:
+    await clear_cache(
+        get_post,
+        'post',
+        kwargs={'post_id': post.id}
+    )
     return await PostsService.delete_post(uow, post.id)
